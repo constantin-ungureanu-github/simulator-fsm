@@ -6,34 +6,11 @@ import static simulator.network.Cell.Events.ConnectToNetwork;
 import static simulator.network.Cell.State.Available;
 import static simulator.network.Cell.State.Idle;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import simulator.Master;
 import simulator.network.Device;
 import simulator.network.Network;
-import akka.actor.ActorRef;
 
 public class Cell extends simulator.network.Cell {
-    private Set<ActorRef> subscribers = new HashSet<>();
-    private ActorRef network;
-
-    public void addSubscriber(ActorRef sender) {
-        subscribers.add(sender);
-    }
-
-    public void removeSubscriber(ActorRef sender) {
-        subscribers.remove(sender);
-    }
-
-    public ActorRef getNetwork() {
-        return network;
-    }
-
-    public void setNetwork(ActorRef network) {
-        this.network = network;
-    }
-
     {
         startWith(Idle, null);
 
