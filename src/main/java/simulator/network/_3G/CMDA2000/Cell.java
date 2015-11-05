@@ -1,5 +1,9 @@
 package simulator.network._3G.CMDA2000;
 
+import static simulator.network.Cell.Events.ConnectCellAck;
+import static simulator.network.Cell.Events.ConnectDevice;
+import static simulator.network.Cell.Events.ConnectToNetwork;
+import static simulator.network.Cell.Events.DisconnectDevice;
 import static simulator.network.Cell.State.Available;
 import static simulator.network.Cell.State.Idle;
 
@@ -34,9 +38,9 @@ public class Cell extends simulator.network.Cell {
     {
         startWith(Idle, null);
 
-        when(Idle, matchEventEquals(Events.ConnectToNetwork, (state, data) -> stay().replying(Network.Events.ConnectCell)));
+        when(Idle, matchEventEquals(ConnectToNetwork, (state, data) -> stay().replying(Network.Events.ConnectCell)));
 
-        when(Idle, matchEventEquals(Events.ConnectCellAck, (state, data) -> {
+        when(Idle, matchEventEquals(ConnectCellAck, (state, data) -> {
             setNetwork(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Available);
@@ -48,13 +52,13 @@ public class Cell extends simulator.network.Cell {
             return stay();
         }));
 
-        when(Available, matchEventEquals(Events.ConnectDevice, (state, data) -> {
+        when(Available, matchEventEquals(ConnectDevice, (state, data) -> {
             addSubscriber(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(Events.DisconnectDevice, (state, data) -> {
+        when(Available, matchEventEquals(DisconnectDevice, (state, data) -> {
             removeSubscriber(sender());
             sender().tell(Device.Events.AckDisconnectFromCell, self());
             return stay();

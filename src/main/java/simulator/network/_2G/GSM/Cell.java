@@ -2,6 +2,7 @@ package simulator.network._2G.GSM;
 
 import static simulator.network.Cell.Events.ConnectCellAck;
 import static simulator.network.Cell.Events.ConnectDevice;
+import static simulator.network.Cell.Events.ConnectToNetwork;
 import static simulator.network.Cell.Events.DisconnectDevice;
 import static simulator.network.Cell.State.Available;
 import static simulator.network.Cell.State.Idle;
@@ -37,7 +38,7 @@ public class Cell extends simulator.network.Cell {
     {
         startWith(State.Idle, null);
 
-        when(State.Idle, matchEventEquals(Events.ConnectToNetwork, (state, data) -> stay().replying(Network.Events.ConnectCell)));
+        when(State.Idle, matchEventEquals(ConnectToNetwork, (state, data) -> stay().replying(Network.Events.ConnectCell)));
 
         when(Idle, matchEventEquals(ConnectCellAck, (state, data) -> {
             setNetwork(sender());
