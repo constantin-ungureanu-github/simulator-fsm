@@ -9,10 +9,10 @@
 		</Console>
 	</Appenders>
 	<Loggers>
-        <Logger name="simulator.actors.Master" level="info" includeLocation="false" additivity="false">
+        <Logger name="simulator.Master" level="info" includeLocation="false" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
-		<Logger name="simulator.actors" level="info" includeLocation="false" additivity="false">
+		<Logger name="simulator.network" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="File" />
 		</Logger>
 		<Root level="info" includeLocation="false">

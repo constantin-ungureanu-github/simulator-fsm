@@ -1,4 +1,4 @@
-package simulator.actors;
+package simulator.utils;
 
 public class WorkLoad {
     private long workLoad;

@@ -1,4 +1,4 @@
-package simulator.actors;
+package simulator;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
