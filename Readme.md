@@ -2,13 +2,13 @@
 
 sbt clean compile
 
-// Run simulator for 100 ticks with 1.000 cells and 100.000 subscribers
+// Run simulator for 100 ticks with 1.000 cells and 100.000 devices and 120.000 subscribers
 
-sbt "run 100 1000 100000" [Java Options]
+sbt "run 100 1000 100000 120000" [Java Options]
 
-// Run simulator for 10 ticks with 10.000 cells and 25.000.000 subscribers
+// Run simulator for 100 ticks with 10.000 cells and 1.000.000 devices and 1.000.000 subscribers
 
-sbt "run 10 10000 25000000" [Java Options]
+sbt "run 100 10000 1000000 1000000" [Java Options]
 
 // Build Eclipse Project
 

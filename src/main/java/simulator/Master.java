@@ -1,5 +1,10 @@
 package simulator;
 
+import static simulator.Master.Events.Ping;
+import static simulator.Master.Events.Pong;
+import static simulator.Master.Events.Stop;
+import static simulator.Master.Events.Tick;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,22 +14,25 @@ import org.apache.logging.log4j.core.async.AsyncLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.network.Device;
-import simulator.network.Network;
-import simulator.utils.WorkLoad;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import simulator.network.Device;
+import simulator.network.Network;
+import simulator.utils.WorkLoad;
 
 public class Master extends UntypedActor {
+    private static Logger log = LoggerFactory.getLogger(Master.class);
     private static ActorRef master;
 
-    private long step, startTime, duration, cellsNumber, devicesNumber;
-    private List<ActorRef> devices = new ArrayList<ActorRef>();
+    private long cellsNumber, devicesNumber, subscribersNumber;
     private List<ActorRef> cells = new ArrayList<ActorRef>();
+    private List<ActorRef> devices = new ArrayList<ActorRef>();
+    private List<ActorRef> subscribers = new ArrayList<ActorRef>();
     private ActorRef network;
+
+    private long step, startTime, duration;
     private WorkLoad workload = new WorkLoad();
-    private static Logger log = LoggerFactory.getLogger(Master.class);
 
     @Override
     public void onReceive(Object message) throws Exception {
@@ -36,36 +44,40 @@ public class Master extends UntypedActor {
             duration = ((Start) message).getDuration();
             cellsNumber = ((Start) message).getCellsNumber();
             devicesNumber = ((Start) message).getDevicesNumber();
+            subscribersNumber = ((Start) message).getSubscribersNumber();
 
             addNetwork();
             addCells();
+            addDevices();
             addSubscribers();
 
             initializeCells();
+            initializeDevices();
             initializeSubscribers();
-        } else if (message == Events.Stop) {
+        } else if (message == Stop) {
             long stopTime = System.currentTimeMillis();
             log.info("Simulation completed after {} milliseconds.", stopTime - startTime);
             AsyncLogger.stop();
             getContext().system().terminate();
-        } else if (message == Events.Ping) {
+        } else if (message == Ping) {
             workload.removeWork();
             if (workload.isWorkDone()) {
                 if (step < duration) {
                     step++;
-                    getSelf().tell(Events.Tick, getSelf());
-                    getSelf().tell(Events.Pong, getSelf());
+                    getSelf().tell(Tick, getSelf());
+                    getSelf().tell(Pong, getSelf());
                 } else {
-                    getSelf().tell(Events.Stop, getSelf());
+                    getSelf().tell(Stop, getSelf());
                 }
             }
-        } else if (message == Events.Pong) {
+        } else if (message == Pong) {
             workload.addWork();
-            getSender().tell(Events.Ping, getSelf());
-        } else if (message == Events.Tick) {
+            getSender().tell(Ping, getSelf());
+        } else if (message == Tick) {
             log.info("{}", step);
-            workload.addWork(devicesNumber);
-            devices.stream().forEach(subscriber -> subscriber.tell(Device.Events.MakeVoiceCall, devices.get(ThreadLocalRandom.current().nextInt((int) devicesNumber))));
+            workload.addWork(subscribersNumber);
+            Step simulationStep = new Step(step);
+            subscribers.stream().forEach(subscriber -> subscriber.tell(simulationStep, ActorRef.noSender()));
         } else {
             unhandled(message);
         }
@@ -109,9 +121,14 @@ public class Master extends UntypedActor {
         }
     }
 
-    private void addSubscribers() {
+    private void addDevices() {
         for (long i = 0L; i < devicesNumber; i++)
             devices.add(context().system().actorOf(Props.create(Device.class), "Device_" + i));
+    }
+
+    private void addSubscribers() {
+        for (long i = 0L; i < subscribersNumber; i++)
+            subscribers.add(context().system().actorOf(Props.create(Subscriber.class), "Subscriber_" + i));
     }
 
     private void initializeCells() {
@@ -119,19 +136,25 @@ public class Master extends UntypedActor {
         cells.stream().forEach(cell -> cell.tell(simulator.network.Cell.Events.ConnectToNetwork, network));
     }
 
-    private void initializeSubscribers() {
+    private void initializeDevices() {
         workload.addWork(devicesNumber);
         devices.stream().forEach(device -> device.tell(Device.Events.ConnectToCell, cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber))));
     }
 
+    private void initializeSubscribers() {
+        workload.addWork(subscribersNumber);
+        subscribers.stream().forEach(subscriber -> subscriber.tell(Subscriber.Events.AddDevice, devices.get((int) ThreadLocalRandom.current().nextLong(devicesNumber))));
+    }
+
     public static final class Start implements Serializable {
         private static final long serialVersionUID = -5750159585853846166L;
-        private long duration, cellsNumber, devicesNumber;
+        private long duration, cellsNumber, devicesNumber, subscribersNumber;
 
-        public Start(long duration, long cellsNumber, long subscribersNumber) {
+        public Start(long duration, long cellsNumber, long devicesNumber, long subscribersNumber) {
             setDuration(duration);
             setCellsNumber(cellsNumber);
-            setDevicesNumber(subscribersNumber);
+            setDevicesNumber(devicesNumber);
+            setSubscribersNumber(subscribersNumber);
         }
 
         public long getDuration() {
@@ -157,6 +180,14 @@ public class Master extends UntypedActor {
         public void setDevicesNumber(long devicesNumber) {
             this.devicesNumber = devicesNumber;
         }
+
+        public long getSubscribersNumber() {
+            return subscribersNumber;
+        }
+
+        public void setSubscribersNumber(long subscribersNumber) {
+            this.subscribersNumber = subscribersNumber;
+        }
     }
 
     public enum Events {
@@ -164,5 +195,21 @@ public class Master extends UntypedActor {
         Ping,
         Pong,
         Tick
+    }
+
+    public static class Step {
+        private long step;
+
+        public Step(long step) {
+            this.step = step;
+        }
+
+        public long getStep() {
+            return step;
+        }
+
+        public void setStep(long step) {
+            this.step = step;
+        }
     }
 }

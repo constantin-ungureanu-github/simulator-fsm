@@ -10,20 +10,23 @@ import static simulator.network.Device.Events.MakeVoiceCall;
 import static simulator.network.Device.Events.NAckConnectToCell;
 import static simulator.network.Device.Events.NAckMakeVoiceCall;
 import static simulator.network.Device.Events.NAckSendSMS;
+import static simulator.network.Device.Events.PickedBySubscriber;
 import static simulator.network.Device.Events.ReceiveSMS;
 import static simulator.network.Device.Events.ReceiveVoiceCall;
 import static simulator.network.Device.Events.SendSMS;
+import static simulator.network.Device.State.Airplane;
 import static simulator.network.Device.State.Available;
 import static simulator.network.Device.State.Off;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.Master;
-import simulator.network.Device.State;
-import simulator.network._2G.GSM.Cell;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
+import simulator.Master;
+import simulator.Subscriber;
+import simulator.network.Device.State;
+import simulator.network._2G.GSM.Cell;
 
 public class Device extends AbstractFSM<State, Data> {
     private static Logger log = LoggerFactory.getLogger(Device.class);
@@ -35,6 +38,7 @@ public class Device extends AbstractFSM<State, Data> {
     }
 
     public enum Events {
+        PickedBySubscriber,
         ConnectToCell,
         AckConnectToCell,
         NAckConnectToCell,
@@ -51,6 +55,7 @@ public class Device extends AbstractFSM<State, Data> {
     }
 
     private ActorRef cell;
+    private ActorRef subscriber;
 
     public ActorRef getCell() {
         return cell;
@@ -60,8 +65,31 @@ public class Device extends AbstractFSM<State, Data> {
         this.cell = cell;
     }
 
+    public ActorRef getSubscriber() {
+        return subscriber;
+    }
+
+    public void setSubscriber(ActorRef subscriber) {
+        this.subscriber = subscriber;
+    }
+
     {
         startWith(Off, null);
+
+        when(Off, matchEventEquals(PickedBySubscriber, (state, data) -> {
+            setSubscriber(sender());
+            return stay();
+        }));
+
+        when(Airplane, matchEventEquals(PickedBySubscriber, (state, data) -> {
+            setSubscriber(sender());
+            return stay();
+        }));
+
+        when(Available, matchEventEquals(PickedBySubscriber, (state, data) -> {
+            setSubscriber(sender());
+            return stay();
+        }));
 
         when(Off, matchEventEquals(ConnectToCell, (state, data) -> {
             sender().tell(Cell.Events.ConnectDevice, self());
@@ -117,7 +145,9 @@ public class Device extends AbstractFSM<State, Data> {
         }));
 
         when(Available, matchEventEquals(MakeVoiceCall, (state, data) -> {
-            sender().tell(ReceiveVoiceCall, self());
+            log.info("{} made voice call using cell {}", self().path().name(), cell.path().name());
+            sender().tell(Subscriber.Events.RemoveWork, self());
+//            sender().tell(ReceiveVoiceCall, self());
             return stay();
         }));
 
@@ -127,13 +157,13 @@ public class Device extends AbstractFSM<State, Data> {
         }));
 
         when(Available, matchEventEquals(AckMakeVoiceCall, (state, data) -> {
-            log.info("{} made voice call using cell {}", self().path().name(), cell.path().name());
-            Master.getMaster().tell(Master.Events.Ping, self());
+//            log.info("{} made voice call using cell {}", self().path().name(), cell.path().name());
+//            getSubscriber().tell(Subscriber.Events.RemoveWork, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(NAckMakeVoiceCall, (state, data) -> {
-            Master.getMaster().tell(Master.Events.Ping, self());
+//            getSubscriber().tell(Subscriber.Events.RemoveWork, self());
             return stay();
         }));
 
