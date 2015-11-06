@@ -24,19 +24,19 @@ public class Cell extends simulator.network.Cell {
         }));
 
         when(Idle, matchEventEquals(ConnectDevice, (state, data) -> {
-            addSubscriber(sender());
+            addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(ConnectDevice, (state, data) -> {
-            addSubscriber(sender());
+            addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(DisconnectDevice, (state, data) -> {
-            removeSubscriber(sender());
+            removeDevice(sender());
             sender().tell(Device.Events.AckDisconnectFromCell, self());
             return stay();
         }));

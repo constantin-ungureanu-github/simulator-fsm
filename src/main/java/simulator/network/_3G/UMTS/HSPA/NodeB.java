@@ -1,4 +1,4 @@
-package simulator.network._2G.GSM.GPRS.EDGE;
+package simulator.network._3G.UMTS.HSPA;
 
 import static simulator.network.Cell.Events.ConnectCellAck;
 import static simulator.network.Cell.Events.ConnectDevice;
@@ -11,7 +11,7 @@ import simulator.Master;
 import simulator.network.Device;
 import simulator.network.Network;
 
-public class Cell extends simulator.network.Cell {
+public class NodeB extends simulator.network.Cell {
     {
         startWith(Idle, null);
 

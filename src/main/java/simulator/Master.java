@@ -104,18 +104,18 @@ public class Master extends UntypedActor {
             } else if (ThreadLocalRandom.current().nextInt(100) < 40) {
                 if (ThreadLocalRandom.current().nextInt(100) < 70) {
                     if (ThreadLocalRandom.current().nextInt(100) < 50) {
-                        cells.add(context().system().actorOf(Props.create(simulator.network._3G.UMTS.HSPA.Cell.class), "3G.HSPA.Cell_" + i));
+                        cells.add(context().system().actorOf(Props.create(simulator.network._3G.UMTS.HSPA.NodeB.class), "3G.HSPA.Cell_" + i));
                     } else {
-                        cells.add(context().system().actorOf(Props.create(simulator.network._3G.UMTS.WCMDA.Cell.class), "3G.WCMDA.Cell_" + i));
+                        cells.add(context().system().actorOf(Props.create(simulator.network._3G.UMTS.WCMDA.NodeB.class), "3G.WCMDA.Cell_" + i));
                     }
                 } else {
-                    cells.add(context().system().actorOf(Props.create(simulator.network._3G.CMDA2000.Cell.class), "3G.CMDA2000.Cell_" + i));
+                    cells.add(context().system().actorOf(Props.create(simulator.network._3G.CMDA2000.NodeB.class), "3G.CMDA2000.Cell_" + i));
                 }
             } else {
                 if (ThreadLocalRandom.current().nextInt(100) < 50) {
-                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.Cell.class), "4G.LTE.Cell_" + i));
+                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.ENodeB.class), "4G.LTE.Cell_" + i));
                 } else {
-                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.VoLTE.Cell.class), "4G.VoLTE.Cell_" + i));
+                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.VoLTE.ENodeB.class), "4G.VoLTE.Cell_" + i));
                 }
             }
         }

@@ -22,15 +22,15 @@ public abstract class Cell extends AbstractFSM<State, Data> {
         DisconnectDevice
     }
 
-    private Set<ActorRef> subscribers = new HashSet<>();
+    private Set<ActorRef> devices = new HashSet<>();
     private ActorRef network;
 
-    public void addSubscriber(ActorRef sender) {
-        subscribers.add(sender);
+    public void addDevice(ActorRef sender) {
+        devices.add(sender);
     }
 
-    public void removeSubscriber(ActorRef sender) {
-        subscribers.remove(sender);
+    public void removeDevice(ActorRef sender) {
+        devices.remove(sender);
     }
 
     public ActorRef getNetwork() {
