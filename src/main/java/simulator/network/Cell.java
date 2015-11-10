@@ -1,5 +1,7 @@
 package simulator.network;
 
+import static simulator.network.Cell.State.Idle;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,7 +13,17 @@ import akka.actor.ActorRef;
 import simulator.network.Cell.State;
 
 public abstract class Cell extends AbstractFSM<State, Data> {
-    protected static Logger log = LoggerFactory.getLogger(Cell.class);
+    private static Logger log = LoggerFactory.getLogger(Cell.class);
+    {
+        startWith(Idle, null);
+
+        whenUnhandled(matchAnyEvent((event, data) -> {
+            log.error("Unhandled event: {}", event);
+            return stay();
+        }));
+
+        initialize();
+    }
 
     public enum State {
         Idle,

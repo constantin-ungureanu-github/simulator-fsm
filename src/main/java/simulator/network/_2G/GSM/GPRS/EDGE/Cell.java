@@ -13,8 +13,6 @@ import simulator.network.Network;
 
 public class Cell extends simulator.network.Cell {
     {
-        startWith(Idle, null);
-
         when(Idle, matchEvent(Events.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
             sender().tell(Network.Events.ConnectCell, self());
             return stay();
@@ -37,12 +35,5 @@ public class Cell extends simulator.network.Cell {
             sender().tell(Device.Events.AckDisconnectFromCell, self());
             return stay();
         }));
-
-        whenUnhandled(matchAnyEvent((event, data) -> {
-            log.error("Unhandled event: {}", event);
-            return stay();
-        }));
-
-        initialize();
     }
 }

@@ -14,8 +14,6 @@ import simulator.network.Network;
 
 public class ENodeB extends Cell {
     {
-        startWith(Idle, null);
-
         when(Idle, matchEvent(Events.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
             sender().tell(Network.Events.ConnectCell, self());
             return stay();
@@ -38,12 +36,5 @@ public class ENodeB extends Cell {
             sender().tell(Device.Events.AckDisconnectFromCell, self());
             return stay();
         }));
-
-        whenUnhandled(matchAnyEvent((event, data) -> {
-            log.error("Unhandled event: {}", event);
-            return stay();
-        }));
-
-        initialize();
     }
 }
