@@ -14,27 +14,26 @@ import static simulator.network.Device.Events.PickedBySubscriber;
 import static simulator.network.Device.Events.ReceiveSMS;
 import static simulator.network.Device.Events.ReceiveVoiceCall;
 import static simulator.network.Device.Events.SendSMS;
-import static simulator.network.Device.State.Airplane;
-import static simulator.network.Device.State.Available;
 import static simulator.network.Device.State.Off;
+import static simulator.network.Device.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.AbstractFSM;
-import akka.actor.ActorRef;
 import simulator.Master;
 import simulator.Subscriber;
 import simulator.network.Device.State;
 import simulator.network._2G.GSM.Cell;
+import akka.actor.AbstractFSM;
+import akka.actor.ActorRef;
 
 public class Device extends AbstractFSM<State, Data> {
     private static Logger log = LoggerFactory.getLogger(Device.class);
 
     public enum State {
         Off,
-        Airplane,
-        Available
+        On,
+        Airplane
     }
 
     public enum Events {
@@ -76,90 +75,59 @@ public class Device extends AbstractFSM<State, Data> {
     {
         startWith(Off, null);
 
-        when(Off, matchEventEquals(PickedBySubscriber, (state, data) -> {
-            setSubscriber(sender());
-            return stay();
-        }));
-
-        when(Airplane, matchEventEquals(PickedBySubscriber, (state, data) -> {
-            setSubscriber(sender());
-            return stay();
-        }));
-
-        when(Available, matchEventEquals(PickedBySubscriber, (state, data) -> {
-            setSubscriber(sender());
-            return stay();
-        }));
-
-        when(Off, matchEventEquals(ConnectToCell, (state, data) -> {
+        when(Off, matchEvent(Events.class, (event, data) -> (event == ConnectToCell), (state, data) -> {
             sender().tell(Cell.Events.ConnectDevice, self());
             return stay();
-        }));
-
-        when(Off, matchEventEquals(AckConnectToCell, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == AckConnectToCell), (state, data) -> {
             setCell(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
-            return goTo(Available);
-        }));
-
-        when(Off, matchEventEquals(NAckConnectToCell, (state, data) -> {
+            return goTo(On);
+        }).event(Events.class, (event, data) -> (event == NAckConnectToCell), (state, data) -> {
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(NAckConnectToCell, (state, data) -> {
+        when(On, matchEvent(Events.class, (event, data) -> (event == NAckConnectToCell), (state, data) -> {
             setCell(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Off);
-        }));
-
-        when(Available, matchEventEquals(DisconnectFromCell, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == DisconnectFromCell), (state, data) -> {
             getCell().tell(Cell.Events.DisconnectDevice, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(AckDisconnectFromCell, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == AckDisconnectFromCell), (state, data) -> {
             setCell(null);
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Off);
-        }));
-
-        when(Available, matchEventEquals(SendSMS, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == SendSMS), (state, data) -> {
             sender().tell(ReceiveSMS, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(ReceiveSMS, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == ReceiveSMS), (state, data) -> {
             sender().tell(AckSendSMS, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(AckSendSMS, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == AckSendSMS), (state, data) -> {
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(NAckSendSMS, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == NAckSendSMS), (state, data) -> {
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(MakeVoiceCall, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == MakeVoiceCall), (state, data) -> {
             log.info("{} made voice call using cell {}", self().path().name(), cell.path().name());
-            sender().tell(Subscriber.Events.RemoveWork, self());
+            sender().tell(Subscriber.DiscreteEvent.RemoveWork, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(ReceiveVoiceCall, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == ReceiveVoiceCall), (state, data) -> {
             sender().tell(AckMakeVoiceCall, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(AckMakeVoiceCall, (state, data) -> {
+        }).event(Events.class, (event, data) -> (event == AckMakeVoiceCall), (state, data) -> {
+            return stay();
+        }).event(Events.class, (event, data) -> (event == NAckMakeVoiceCall), (state, data) -> {
             return stay();
         }));
 
-        when(Available, matchEventEquals(NAckMakeVoiceCall, (state, data) -> {
+        whenUnhandled(matchEventEquals(PickedBySubscriber, (state, data) -> {
+            setSubscriber(sender());
+            return stay();
+        }).anyEvent((event, data) -> {
+            log.error("Unhandled event: {}", event);
             return stay();
         }));
 

@@ -143,7 +143,7 @@ public class Master extends UntypedActor {
 
     private void initializeSubscribers() {
         workload.addWork(subscribersNumber);
-        subscribers.stream().forEach(subscriber -> subscriber.tell(Subscriber.Events.AddDevice, devices.get((int) ThreadLocalRandom.current().nextLong(devicesNumber))));
+        subscribers.stream().forEach(subscriber -> subscriber.tell(Subscriber.DeviceEvents.AddDevice, devices.get((int) ThreadLocalRandom.current().nextLong(devicesNumber))));
     }
 
     public static final class Start implements Serializable {

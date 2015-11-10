@@ -14,8 +14,8 @@ public abstract class Cell extends AbstractFSM<State, Data> {
     protected static Logger log = LoggerFactory.getLogger(Cell.class);
 
     public enum State {
-        Down,
-        Up
+        Off,
+        On
     }
 
     public enum Events {

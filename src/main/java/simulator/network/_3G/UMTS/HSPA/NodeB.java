@@ -4,8 +4,8 @@ import static simulator.network.Cell.Events.ConnectCellAck;
 import static simulator.network.Cell.Events.ConnectDevice;
 import static simulator.network.Cell.Events.ConnectToNetwork;
 import static simulator.network.Cell.Events.DisconnectDevice;
-import static simulator.network.Cell.State.Down;
-import static simulator.network.Cell.State.Up;
+import static simulator.network.Cell.State.Off;
+import static simulator.network.Cell.State.On;
 import simulator.Master;
 import simulator.network.Cell;
 import simulator.network.Device;
@@ -13,25 +13,25 @@ import simulator.network.Network;
 
 public class NodeB extends Cell {
     {
-        startWith(Down, null);
+        startWith(Off, null);
 
-        when(Down, matchEvent(Events.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
+        when(Off, matchEvent(Events.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
             sender().tell(Network.Events.ConnectCell, self());
             return stay();
         }).event(Events.class, (event, data) -> (event == ConnectCellAck), (event, data) -> {
             setNetwork(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
-            return goTo(Up);
+            return goTo(On);
         }).event(Events.class, (event, data) -> (event == ConnectDevice), (event, data) -> {
             addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
-        }).anyEvent((event, state) -> {
+        }).event(Events.class, (event, state) -> {
             log.error("Unhandled event: {}", event);
             return stay();
         }));
 
-        when(Up, matchEvent(Events.class, (event, data) -> (event == ConnectDevice), (state, data) -> {
+        when(On, matchEvent(Events.class, (event, data) -> (event == ConnectDevice), (state, data) -> {
             addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
@@ -39,7 +39,7 @@ public class NodeB extends Cell {
             removeDevice(sender());
             sender().tell(Device.Events.AckDisconnectFromCell, self());
             return stay();
-        }).anyEvent((event, state) -> {
+        }).event(Events.class, (event, state) -> {
             log.error("Unhandled event: {}", event);
             return stay();
         }));

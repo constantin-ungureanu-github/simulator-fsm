@@ -1,14 +1,14 @@
 package simulator;
 
-import static simulator.Subscriber.Events.AddDevice;
-import static simulator.Subscriber.Events.EndVoiceCall;
+import static simulator.Subscriber.DeviceEvents.AddDevice;
+import static simulator.Subscriber.DiscreteEvent.RemoveWork;
 import static simulator.Subscriber.Events.GoToSleep;
 import static simulator.Subscriber.Events.GoToWork;
-import static simulator.Subscriber.Events.MakeVoiceCall;
-import static simulator.Subscriber.Events.RemoveWork;
 import static simulator.Subscriber.Events.ReturnFromWork;
-import static simulator.Subscriber.Events.SendSMS;
 import static simulator.Subscriber.Events.WakeUp;
+import static simulator.Subscriber.NetworkEvents.EndVoiceCall;
+import static simulator.Subscriber.NetworkEvents.MakeVoiceCall;
+import static simulator.Subscriber.NetworkEvents.SendSMS;
 import static simulator.Subscriber.State.Available;
 import static simulator.Subscriber.State.Flying;
 import static simulator.Subscriber.State.InCall;
@@ -24,8 +24,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.Subscriber.Data;
 import simulator.Subscriber.State;
+import simulator.network.Data;
 import simulator.network.Device;
 import simulator.utils.WorkLoad;
 import akka.actor.AbstractFSM;
@@ -43,37 +43,19 @@ public class Subscriber extends AbstractFSM<State, Data> {
     }
 
     public enum Events {
-        WakeUp, GoToSleep, ReturnFromWork, GoToWork, AddDevice, RemoveDevice,
+        WakeUp, GoToSleep, ReturnFromWork, GoToWork
+    }
 
-        MakeVoiceCall, EndVoiceCall, SendSMS,
+    public enum DeviceEvents {
+        AddDevice, RemoveDevice
+    }
 
+    public enum DiscreteEvent {
         RemoveWork
     }
 
     public enum NetworkEvents {
         MakeVoiceCall, EndVoiceCall, SendSMS
-    }
-
-
-    interface Data {
-    }
-
-    final class Todo implements Data {
-        private final ActorRef target;
-        private final List<Object> queue;
-
-        public Todo(ActorRef target, List<Object> queue) {
-            this.target = target;
-            this.queue = queue;
-        }
-
-        public ActorRef getTarget() {
-            return target;
-        }
-
-        public List<Object> getQueue() {
-            return queue;
-        }
     }
 
     private List<ActorRef> devices = new ArrayList<ActorRef>();
@@ -124,21 +106,21 @@ public class Subscriber extends AbstractFSM<State, Data> {
         }));
 
         // Receive Device
-        when(Sleeping, matchEventEquals(AddDevice, (state, data) -> {
+        when(Sleeping, matchEventEquals(DeviceEvents.AddDevice, (state, data) -> {
             devices.add(sender());
             sender().tell(Device.Events.PickedBySubscriber, self());
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
         }));
 
-        when(Working, matchEventEquals(AddDevice, (state, data) -> {
+        when(Working, matchEventEquals(DeviceEvents.AddDevice, (state, data) -> {
             devices.add(sender());
             sender().tell(Device.Events.PickedBySubscriber, self());
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(AddDevice, (state, data) -> {
+        when(Available, matchEventEquals(DeviceEvents.AddDevice, (state, data) -> {
             devices.add(sender());
             sender().tell(Device.Events.PickedBySubscriber, self());
             Master.getMaster().tell(Master.Events.Ping, self());
@@ -150,7 +132,7 @@ public class Subscriber extends AbstractFSM<State, Data> {
             return goTo(InCall);
         }));
 
-        when(Available, matchEventEquals(Events.SendSMS, (state, data) -> {
+        when(Available, matchEventEquals(SendSMS, (state, data) -> {
             return stay();
         }));
 

@@ -15,9 +15,7 @@ public class SGW extends AbstractFSM<State, Data> {
     private static Logger log = LoggerFactory.getLogger(SGW.class);
 
     public enum State {
-        Idle,
-        Available,
-        Down
+        Idle, Available, Down
     }
 
     {
@@ -25,17 +23,23 @@ public class SGW extends AbstractFSM<State, Data> {
 
         when(Available, matchEvent(S11.class, (event, data) -> (event == S11.Event1), (state, data) -> {
             // TODO
-            return stay();
-        }).event(S11.class, (event, data) -> (event == S11.Event2), (event, data) -> {
+                return stay();
+            }).event(S11.class, (event, data) -> (event == S11.Event2), (event, data) -> {
             // TODO
+                return stay();
+            }).event(S11.class, (event, state) -> {
+            log.error("Unhandled event: {}", event);
             return stay();
         }));
 
         when(Available, matchEvent(S5.class, (event, data) -> (event == S5.Event1), (state, data) -> {
             // TODO
-            return stay();
-        }).event(S5.class, (event, data) -> (event == S5.Event2), (event, data) -> {
+                return stay();
+            }).event(S5.class, (event, data) -> (event == S5.Event2), (event, data) -> {
             // TODO
+                return stay();
+            }).event(S5.class, (event, state) -> {
+            log.error("Unhandled event: {}", event);
             return stay();
         }));
 

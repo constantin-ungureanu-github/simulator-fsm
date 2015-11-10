@@ -28,6 +28,9 @@ public class PGW extends AbstractFSM<State, Data> {
         }).event(Gx.class, (event, data) -> (event == Gx.Event2), (event, data) -> {
             // TODO
             return stay();
+        }).event(Gx.class, (event, state) -> {
+            log.error("Unhandled event: {}", event);
+            return stay();
         }));
 
         whenUnhandled(matchAnyEvent((event, data) -> {
