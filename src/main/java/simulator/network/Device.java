@@ -99,7 +99,8 @@ public class Device extends AbstractFSM<State, Data> {
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Off);
         }).event(Events.class, (event, data) -> (event == SendSMS), (state, data) -> {
-            sender().tell(ReceiveSMS, self());
+            log.info("{} sent SMS using cell {}", self().path().name(), cell.path().name());
+            sender().tell(Subscriber.DiscreteEvent.RemoveWork, self());
             return stay();
         }).event(Events.class, (event, data) -> (event == ReceiveSMS), (state, data) -> {
             sender().tell(AckSendSMS, self());
