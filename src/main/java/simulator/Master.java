@@ -113,7 +113,7 @@ public class Master extends UntypedActor {
                 }
             } else {
                 if (ThreadLocalRandom.current().nextInt(100) < 50) {
-                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.ENodeB.class), "4G.LTE.Cell_" + i));
+                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.eNodeB.class), "4G.LTE.Cell_" + i));
                 } else {
                     cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.VoLTE.ENodeB.class), "4G.VoLTE.Cell_" + i));
                 }

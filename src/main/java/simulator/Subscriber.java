@@ -24,12 +24,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.AbstractFSM;
-import akka.actor.ActorRef;
 import simulator.Subscriber.Data;
 import simulator.Subscriber.State;
 import simulator.network.Device;
 import simulator.utils.WorkLoad;
+import akka.actor.AbstractFSM;
+import akka.actor.ActorRef;
 
 public class Subscriber extends AbstractFSM<State, Data> {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
@@ -142,8 +142,6 @@ public class Subscriber extends AbstractFSM<State, Data> {
             devices.add(sender());
             sender().tell(Device.Events.PickedBySubscriber, self());
             Master.getMaster().tell(Master.Events.Ping, self());
-            return stay();
-        }).anyEvent((event, state) -> {
             return stay();
         }));
 

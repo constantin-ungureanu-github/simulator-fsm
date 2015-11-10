@@ -1,4 +1,4 @@
-package simulator.network._3G.CMDA2000;
+package simulator.network._4G.LTE;
 
 import static simulator.network.Cell.Events.ConnectCellAck;
 import static simulator.network.Cell.Events.ConnectDevice;
@@ -11,20 +11,23 @@ import simulator.network.Cell;
 import simulator.network.Device;
 import simulator.network.Network;
 
-public class NodeB extends Cell {
+public class eNodeB extends Cell {
     {
         startWith(Down, null);
 
         when(Down, matchEvent(Events.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
             sender().tell(Network.Events.ConnectCell, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == ConnectCellAck), (event, data) -> {
+        }).event((event, data) -> (event == ConnectCellAck), (event, data) -> {
             setNetwork(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Up);
-        }).event(Events.class, (event, data) -> (event == ConnectDevice), (event, data) -> {
+        }).event((event, data) -> (event == ConnectDevice), (event, data) -> {
             addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
+            return stay();
+        }).anyEvent((event, state) -> {
+            log.error("Unhandled event: {}", event);
             return stay();
         }).anyEvent((event, state) -> {
             log.error("Unhandled event: {}", event);
@@ -35,9 +38,12 @@ public class NodeB extends Cell {
             addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == DisconnectDevice), (event, data) -> {
+        }).event((event, data) -> (event == DisconnectDevice), (event, data) -> {
             removeDevice(sender());
             sender().tell(Device.Events.AckDisconnectFromCell, self());
+            return stay();
+        }).anyEvent((event, state) -> {
+            log.error("Unhandled event: {}", event);
             return stay();
         }).anyEvent((event, state) -> {
             log.error("Unhandled event: {}", event);
