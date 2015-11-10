@@ -7,60 +7,40 @@ import static simulator.network.Cell.Events.DisconnectDevice;
 import static simulator.network.Cell.State.Available;
 import static simulator.network.Cell.State.Idle;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import simulator.Master;
+import simulator.network.Cell;
 import simulator.network.Device;
 import simulator.network.Network;
-import akka.actor.ActorRef;
 
-public class NodeB extends simulator.network.Cell {
-    private Set<ActorRef> subscribers = new HashSet<>();
-    private ActorRef network;
-
-    public void addDevice(ActorRef sender) {
-        subscribers.add(sender);
-    }
-
-    public void removeDevice(ActorRef sender) {
-        subscribers.remove(sender);
-    }
-
-    public ActorRef getNetwork() {
-        return network;
-    }
-
-    public void setNetwork(ActorRef network) {
-        this.network = network;
-    }
-
+public class NodeB extends Cell {
     {
         startWith(Idle, null);
 
-        when(Idle, matchEventEquals(ConnectToNetwork, (state, data) -> stay().replying(Network.Events.ConnectCell)));
-
-        when(Idle, matchEventEquals(ConnectCellAck, (state, data) -> {
+        when(Idle, matchEvent(Events.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
+            sender().tell(Network.Events.ConnectCell, self());
+            return stay();
+        }).event((event, data) -> (event == ConnectCellAck), (event, data) -> {
             setNetwork(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Available);
-        }));
-
-        when(Idle, matchEventEquals(Events.ConnectDevice, (state, data) -> {
+        }).event((event, data) -> (event == ConnectDevice), (event, data) -> {
             addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(ConnectDevice, (state, data) -> {
+        when(Available, matchEvent(Events.class, (event, data) -> (event == ConnectDevice), (state, data) -> {
             addDevice(sender());
             sender().tell(Device.Events.AckConnectToCell, self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(DisconnectDevice, (state, data) -> {
+        }).event((event, data) -> (event == DisconnectDevice), (event, data) -> {
             removeDevice(sender());
             sender().tell(Device.Events.AckDisconnectFromCell, self());
+            return stay();
+        }));
+
+        whenUnhandled(matchAnyEvent((event, data) -> {
+            log.error("Unhandled event: {}", event);
             return stay();
         }));
 

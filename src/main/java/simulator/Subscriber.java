@@ -5,7 +5,9 @@ import static simulator.Subscriber.Events.EndVoiceCall;
 import static simulator.Subscriber.Events.GoToSleep;
 import static simulator.Subscriber.Events.GoToWork;
 import static simulator.Subscriber.Events.MakeVoiceCall;
+import static simulator.Subscriber.Events.RemoveWork;
 import static simulator.Subscriber.Events.ReturnFromWork;
+import static simulator.Subscriber.Events.SendSMS;
 import static simulator.Subscriber.Events.WakeUp;
 import static simulator.Subscriber.State.Available;
 import static simulator.Subscriber.State.Flying;
@@ -19,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 import simulator.Subscriber.Data;
@@ -27,60 +32,60 @@ import simulator.network.Device;
 import simulator.utils.WorkLoad;
 
 public class Subscriber extends AbstractFSM<State, Data> {
+    private static Logger log = LoggerFactory.getLogger(Subscriber.class);
+
     public enum State {
-        Sleeping,
-        Working,
-        Available,
-        Unavailable,
+        Sleeping, Working, Available, Unavailable,
 
-        Walking,
-        Flying,
+        Walking, Flying,
 
-        InCall,
-        InDataSession
+        InCall, InDataSession
     }
 
     public enum Events {
-        WakeUp,
-        GoToSleep,
-        ReturnFromWork,
-        GoToWork,
-        AddDevice,
-        RemoveDevice,
+        WakeUp, GoToSleep, ReturnFromWork, GoToWork, AddDevice, RemoveDevice,
 
-        MakeVoiceCall,
-        EndVoiceCall,
-        SendSMS,
+        MakeVoiceCall, EndVoiceCall, SendSMS,
 
         RemoveWork
     }
 
-    public static class Data {
+    public enum NetworkEvents {
+        MakeVoiceCall, EndVoiceCall, SendSMS
+    }
+
+
+    interface Data {
+    }
+
+    final class Todo implements Data {
+        private final ActorRef target;
+        private final List<Object> queue;
+
+        public Todo(ActorRef target, List<Object> queue) {
+            this.target = target;
+            this.queue = queue;
+        }
+
+        public ActorRef getTarget() {
+            return target;
+        }
+
+        public List<Object> getQueue() {
+            return queue;
+        }
     }
 
     private List<ActorRef> devices = new ArrayList<ActorRef>();
-//    private Map<Long, Set<Events>> workMap = new HashMap<>();
     private WorkLoad workLoad = new WorkLoad();
-//    private double latitude, longitude;
 
     {
         startWith(Sleeping, null);
 
-        when(Sleeping, matchEventEquals(WakeUp, (state, data) -> {
-            return goTo(Available);
-        }));
-
-        when(Available, matchEventEquals(GoToSleep, (state, data) -> {
-            return goTo(Sleeping);
-        }));
-
-        when(Available, matchEventEquals(GoToWork, (state, data) -> {
-            return goTo(Working);
-        }));
-
-        when(Working, matchEventEquals(ReturnFromWork, (state, data) -> {
-            return goTo(Available);
-        }));
+        when(Sleeping, matchEventEquals(WakeUp, (state, data) -> goTo(Available)));
+        when(Available, matchEventEquals(GoToSleep, (state, data) -> goTo(Sleeping)));
+        when(Available, matchEventEquals(GoToWork, (state, data) -> goTo(Working)));
+        when(Working, matchEventEquals(ReturnFromWork, (state, data) -> goTo(Available)));
 
         // Refresh step
         when(Sleeping, matchEvent(Master.Step.class, (step, data) -> {
@@ -109,13 +114,11 @@ public class Subscriber extends AbstractFSM<State, Data> {
         }));
 
         when(Walking, matchEvent(Master.Step.class, (step, data) -> {
-            move();
             processStep(step.getStep());
             return stay();
         }));
 
         when(Flying, matchEvent(Master.Step.class, (step, data) -> {
-            fly();
             processStep(step.getStep());
             return stay();
         }));
@@ -140,6 +143,8 @@ public class Subscriber extends AbstractFSM<State, Data> {
             sender().tell(Device.Events.PickedBySubscriber, self());
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
+        }).anyEvent((event, state) -> {
+            return stay();
         }));
 
         // Calls
@@ -156,7 +161,7 @@ public class Subscriber extends AbstractFSM<State, Data> {
         }));
 
         // Remove work
-        when(Sleeping, matchEventEquals(Events.RemoveWork, (state, data) -> {
+        when(Sleeping, matchEventEquals(RemoveWork, (state, data) -> {
             workLoad.removeWork();
             if (workLoad.isWorkDone()) {
                 Master.getMaster().tell(Master.Events.Ping, self());
@@ -180,12 +185,11 @@ public class Subscriber extends AbstractFSM<State, Data> {
             ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
             if (device != null) {
                 device.tell(Device.Events.MakeVoiceCall, self());
-//                return goTo(InCall);
             }
             return stay();
         }));
 
-        when(Available, matchEventEquals(Events.SendSMS, (state, data) -> {
+        when(Available, matchEventEquals(SendSMS, (state, data) -> {
             return stay();
         }));
 
@@ -194,8 +198,6 @@ public class Subscriber extends AbstractFSM<State, Data> {
         }));
 
         when(Sleeping, matchEventEquals(Device.Events.ReceiveVoiceCall, (state, data) -> {
-//            sender().tell(Device.Events.AckMakeVoiceCall, self());
-//            return goTo(InCall);
             return stay();
         }));
 
@@ -203,39 +205,34 @@ public class Subscriber extends AbstractFSM<State, Data> {
             ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
             if (device != null) {
                 device.tell(Device.Events.MakeVoiceCall, self());
-//                return goTo(InCall);
             } else {
-                // cry
             }
             return stay();
+        }));
+
+        whenUnhandled(matchAnyEvent((event, data) -> {
+            log.error("Unhandled event: {}", event);
+            return stay();
+        }));
+
+        onTransition(matchState(Sleeping, Available, () -> {
+        }).state(Sleeping, Available, () -> {
+        }));
+
+        onTermination(matchStop(Normal(), (state, data) -> {
+        }).stop(Shutdown(), (state, data) -> {
+        }).stop(Failure.class, (reason, state, data) -> {
         }));
 
         initialize();
     }
 
     private void processStep(long step) {
-//        Set<Events> events = workMap.get(step);
-//        if (events != null) {
-//            workLoad.addWork(events.size());
-//            for (Events event : events) {
-//                self().tell(event, self());
-//            }
-//            events.remove(step);
-//        }
-
-        if (ThreadLocalRandom.current().nextInt(100) < 10) {
+        if (ThreadLocalRandom.current().nextInt(100) < 90) {
             workLoad.addWork();
             self().tell(MakeVoiceCall, self());
         } else {
             Master.getMaster().tell(Master.Events.Ping, self());
         }
-    }
-
-    private void move() {
-        // TODO
-    }
-
-    private void fly() {
-        // TODO
     }
 }

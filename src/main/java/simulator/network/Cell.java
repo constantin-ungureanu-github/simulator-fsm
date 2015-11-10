@@ -3,11 +3,16 @@ package simulator.network;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 import simulator.network.Cell.State;
 
 public abstract class Cell extends AbstractFSM<State, Data> {
+    protected static Logger log = LoggerFactory.getLogger(Cell.class);
+
     public enum State {
         Idle,
         Available,

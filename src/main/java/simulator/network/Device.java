@@ -147,7 +147,6 @@ public class Device extends AbstractFSM<State, Data> {
         when(Available, matchEventEquals(MakeVoiceCall, (state, data) -> {
             log.info("{} made voice call using cell {}", self().path().name(), cell.path().name());
             sender().tell(Subscriber.Events.RemoveWork, self());
-//            sender().tell(ReceiveVoiceCall, self());
             return stay();
         }));
 
@@ -157,13 +156,10 @@ public class Device extends AbstractFSM<State, Data> {
         }));
 
         when(Available, matchEventEquals(AckMakeVoiceCall, (state, data) -> {
-//            log.info("{} made voice call using cell {}", self().path().name(), cell.path().name());
-//            getSubscriber().tell(Subscriber.Events.RemoveWork, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(NAckMakeVoiceCall, (state, data) -> {
-//            getSubscriber().tell(Subscriber.Events.RemoveWork, self());
             return stay();
         }));
 
