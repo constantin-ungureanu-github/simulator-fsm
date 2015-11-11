@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.4.1",
   "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.4.1",
   "com.lmax" % "disruptor" % "3.3.2",
+  "org.apache.commons" % "commons-csv" % "1.2",
   "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.0" % "test",
   "junit" % "junit" % "4.12" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test")

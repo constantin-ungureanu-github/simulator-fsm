@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
 	<Appenders>
-		<RandomAccessFile name="File" fileName="output.log" immediateFlush="false" append="false">
-			<PatternLayout pattern="%msg%n" />
-		</RandomAccessFile>
+		<RollingRandomAccessFile name="File" fileName="csv/output.csv" immediateFlush="false" append="false" filePattern="csv/%d{yyyy-MM-dd-HH}-%i.csv.gz">
+			<CsvParameterLayout delimiter="," header="DEVICE, CELL${sys:line.separator}" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10 MB" />
+			</Policies>
+		</RollingRandomAccessFile>
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
 		</Console>
 	</Appenders>
 	<Loggers>
-        <Logger name="simulator.Master" level="info" includeLocation="false" additivity="false">
-            <AppenderRef ref="Console" />
-        </Logger>
+		<Logger name="simulator.Master" level="info" includeLocation="false" additivity="false">
+			<AppenderRef ref="Console" />
+		</Logger>
 		<Logger name="simulator.network" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="File" />
 		</Logger>
