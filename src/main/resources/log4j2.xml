@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
 	<Appenders>
-		<RollingRandomAccessFile name="File" fileName="csv/output.csv" immediateFlush="false" append="false" filePattern="csv/%d{yyyy-MM-dd-HH}-%i.csv.gz">
-			<CsvParameterLayout delimiter="," header="DEVICE, CELL${sys:line.separator}" />
+		<RollingRandomAccessFile name="File" fileName="csv/output.csv" filePattern="csv/%d{yyyy-MM-dd-HH-mm-ss-SSS}.csv.gz" immediateFlush="false" append="false">
+			<CsvParameterLayout delimiter="," header="DEVICE,CELL${sys:line.separator}" />
 			<Policies>
 				<SizeBasedTriggeringPolicy size="10 MB" />
 			</Policies>
