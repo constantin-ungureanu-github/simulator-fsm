@@ -1,8 +1,8 @@
 name := "simulator"
-version := "0.4"
+version := "0.5"
 scalaVersion := "2.11.7"
 compileOrder := CompileOrder.JavaThenScala
-mainClass in (Compile, packageBin) := Some("simulator.actors.Simulator")
+mainClass in (Compile, packageBin) := Some("simulator.Simulator")
 EclipseKeys.withSource := true
 enablePlugins(JavaAppPackaging)
 

@@ -1,32 +1,22 @@
 package simulator.network._4G.LTE;
 
-import static simulator.network._4G.LTE.PCRF.State.Available;
+import static simulator.network.NE.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.network.Data;
-import simulator.network._4G.LTE.PCRF.State;
+import simulator.network.NE;
 import simulator.network._4G.LTE.Interfaces.Gx;
-import akka.actor.AbstractFSM;
 
-public class PCRF extends AbstractFSM<State, Data> {
+public class PCRF extends NE {
     private static Logger log = LoggerFactory.getLogger(PGW.class);
 
-    public enum State {
-        Idle,
-        Available,
-        Down
-    }
-
     {
-        startWith(Available, null);
+        startWith(On, null);
 
-        when(Available, matchEvent(Gx.class, (event, data) -> (event == Gx.Event1), (state, data) -> {
-            // TODO
+        when(On, matchEvent(Gx.class, (event, data) -> (event == Gx.Event1), (state, data) -> {
             return stay();
         }).event(Gx.class, (event, data) -> (event == Gx.Event2), (event, data) -> {
-            // TODO
             return stay();
         }).event(Gx.class, (event, state) -> {
             log.error("Unhandled event: {}", event);

@@ -7,9 +7,7 @@ import static simulator.network.Network.Events.Routing;
 import static simulator.network.Network.Events.UnregisterDevice;
 import static simulator.network.Network.State.Available;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import simulator.network.Network.State;
@@ -31,8 +29,7 @@ public class Network extends AbstractFSM<State, Data> {
     }
 
     private Set<ActorRef> cells = new HashSet<>();
-    private Map<ActorRef, ActorRef> routes = new HashMap<>();
-    
+
     public void addCell(ActorRef sender) {
         cells.add(sender);
     }
@@ -57,19 +54,16 @@ public class Network extends AbstractFSM<State, Data> {
         }));
 
         when(Available, matchEventEquals(RegisterDevice, (state, data) -> {
-            routes.put(data.getSource(), data.getDestination());
             sender().tell(Cell.Events.ConnectCellAck, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(UnregisterDevice, (state, data) -> {
-            routes.remove(sender());
             sender().tell(Cell.Events.DisconnectFromNetwork, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(Routing, (state, data) -> {
-            routes.get(sender()).tell(Cell.Events.DisconnectFromNetwork, self());
             return stay();
         }));
 

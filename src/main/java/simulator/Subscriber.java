@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import simulator.Subscriber.State;
 import simulator.network.Data;
-import simulator.network.Device;
+import simulator.network.UE;
 import simulator.utils.WorkLoad;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
@@ -62,9 +62,10 @@ public class Subscriber extends AbstractFSM<State, Data> {
         when(Working, matchEventEquals(ReturnFromWork, (state, data) -> goTo(Available)));
 
         when(Available, matchEventEquals(SendSMS, (state, data) -> {
-            ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
-            if (device != null) {
-                device.tell(Device.Events.SendSMS, self());
+            ActorRef ue = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
+            if (ue != null) {
+                ue.tell(UE.Events.SendSMS, self());
+                stay();
             }
             return stay();
         }));
@@ -76,7 +77,7 @@ public class Subscriber extends AbstractFSM<State, Data> {
             return stay();
         }).eventEquals(AddDevice, (state, data) -> {
             devices.add(sender());
-            sender().tell(Device.Events.PickedBySubscriber, self());
+            sender().tell(UE.Events.PickedBySubscriber, self());
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
         }).eventEquals(RemoveWork, (state, data) -> {
@@ -94,11 +95,11 @@ public class Subscriber extends AbstractFSM<State, Data> {
     }
 
     private void processStep(long step) {
-        if (ThreadLocalRandom.current().nextInt(100) < 10) {
+//        if (ThreadLocalRandom.current().nextInt(100) < 10) {
             workLoad.addWork();
             self().tell(SendSMS, self());
-        } else {
-            Master.getMaster().tell(Master.Events.Ping, self());
-        }
+//        } else {
+//            Master.getMaster().tell(Master.Events.Ping, self());
+//        }
     }
 }

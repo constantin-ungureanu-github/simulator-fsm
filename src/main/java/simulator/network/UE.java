@@ -1,34 +1,34 @@
 package simulator.network;
 
-import static simulator.network.Device.Events.AckConnectToCell;
-import static simulator.network.Device.Events.AckDisconnectFromCell;
-import static simulator.network.Device.Events.AckMakeVoiceCall;
-import static simulator.network.Device.Events.AckSendSMS;
-import static simulator.network.Device.Events.ConnectToCell;
-import static simulator.network.Device.Events.DisconnectFromCell;
-import static simulator.network.Device.Events.MakeVoiceCall;
-import static simulator.network.Device.Events.NAckConnectToCell;
-import static simulator.network.Device.Events.NAckMakeVoiceCall;
-import static simulator.network.Device.Events.NAckSendSMS;
-import static simulator.network.Device.Events.PickedBySubscriber;
-import static simulator.network.Device.Events.ReceiveSMS;
-import static simulator.network.Device.Events.ReceiveVoiceCall;
-import static simulator.network.Device.Events.SendSMS;
-import static simulator.network.Device.State.Off;
-import static simulator.network.Device.State.On;
+import static simulator.network.UE.Events.AckConnectToCell;
+import static simulator.network.UE.Events.AckDisconnectFromCell;
+import static simulator.network.UE.Events.AckMakeVoiceCall;
+import static simulator.network.UE.Events.AckSendSMS;
+import static simulator.network.UE.Events.ConnectToCell;
+import static simulator.network.UE.Events.DisconnectFromCell;
+import static simulator.network.UE.Events.MakeVoiceCall;
+import static simulator.network.UE.Events.NAckConnectToCell;
+import static simulator.network.UE.Events.NAckMakeVoiceCall;
+import static simulator.network.UE.Events.NAckSendSMS;
+import static simulator.network.UE.Events.PickedBySubscriber;
+import static simulator.network.UE.Events.ReceiveSMS;
+import static simulator.network.UE.Events.ReceiveVoiceCall;
+import static simulator.network.UE.Events.SendSMS;
+import static simulator.network.UE.State.Off;
+import static simulator.network.UE.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import simulator.Master;
 import simulator.Subscriber;
-import simulator.network.Device.State;
+import simulator.network.UE.State;
 import simulator.network._2G.GSM.Cell;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 
-public class Device extends AbstractFSM<State, Data> {
-    private static Logger log = LoggerFactory.getLogger(Device.class);
+public class UE extends AbstractFSM<State, Data> {
+    private static Logger log = LoggerFactory.getLogger(UE.class);
 
     public enum State {
         Off,

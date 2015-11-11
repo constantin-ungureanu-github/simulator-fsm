@@ -14,12 +14,12 @@ import org.apache.logging.log4j.core.async.AsyncLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import simulator.network.UE;
+import simulator.network.Network;
+import simulator.utils.WorkLoad;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import simulator.network.Device;
-import simulator.network.Network;
-import simulator.utils.WorkLoad;
 
 public class Master extends UntypedActor {
     private static Logger log = LoggerFactory.getLogger(Master.class);
@@ -123,7 +123,7 @@ public class Master extends UntypedActor {
 
     private void addDevices() {
         for (long i = 0L; i < devicesNumber; i++)
-            devices.add(context().system().actorOf(Props.create(Device.class), "Device_" + i));
+            devices.add(context().system().actorOf(Props.create(UE.class), "Device_" + i));
     }
 
     private void addSubscribers() {
@@ -138,7 +138,7 @@ public class Master extends UntypedActor {
 
     private void initializeDevices() {
         workload.addWork(devicesNumber);
-        devices.stream().forEach(device -> device.tell(Device.Events.ConnectToCell, cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber))));
+        devices.stream().forEach(device -> device.tell(UE.Events.ConnectToCell, cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber))));
     }
 
     private void initializeSubscribers() {
@@ -211,5 +211,9 @@ public class Master extends UntypedActor {
         public void setStep(long step) {
             this.step = step;
         }
+    }
+
+    public ActorRef getRandomDevice() {
+        return devices.get((int) ThreadLocalRandom.current().nextLong(devicesNumber));
     }
 }

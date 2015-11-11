@@ -1,28 +1,20 @@
 package simulator.network._4G.LTE;
 
-import static simulator.network._4G.LTE.HSS.State.Available;
+import static simulator.network.NE.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.network.Data;
-import simulator.network._4G.LTE.HSS.State;
+import simulator.network.NE;
 import simulator.network._4G.LTE.Interfaces.Gx;
-import akka.actor.AbstractFSM;
 
-public class HSS extends AbstractFSM<State, Data> {
+public class HSS extends NE {
     private static Logger log = LoggerFactory.getLogger(HSS.class);
 
-    public enum State {
-        Idle,
-        Available,
-        Down
-    }
-
     {
-        startWith(Available, null);
+        startWith(On, null);
 
-        when(Available, matchEvent(Gx.class, (event, data) -> (event == Gx.Event1), (state, data) -> {
+        when(On, matchEvent(Gx.class, (event, data) -> (event == Gx.Event1), (state, data) -> {
             // TODO
             return stay();
         }).event(Gx.class, (event, data) -> (event == Gx.Event2), (event, data) -> {

@@ -8,7 +8,7 @@ import static simulator.network.Cell.State.Off;
 import static simulator.network.Cell.State.On;
 import simulator.Master;
 import simulator.network.Cell;
-import simulator.network.Device;
+import simulator.network.UE;
 import simulator.network.Network;
 
 public class NodeB extends Cell {
@@ -24,7 +24,7 @@ public class NodeB extends Cell {
             return goTo(On);
         }).event(Events.class, (event, data) -> (event == ConnectDevice), (event, data) -> {
             addDevice(sender());
-            sender().tell(Device.Events.AckConnectToCell, self());
+            sender().tell(UE.Events.AckConnectToCell, self());
             return stay();
         }).event(Events.class, (event, state) -> {
             log.error("Unhandled event: {}", event);
@@ -33,11 +33,11 @@ public class NodeB extends Cell {
 
         when(On, matchEvent(Events.class, (event, data) -> (event == ConnectDevice), (state, data) -> {
             addDevice(sender());
-            sender().tell(Device.Events.AckConnectToCell, self());
+            sender().tell(UE.Events.AckConnectToCell, self());
             return stay();
         }).event(Events.class, (event, data) -> (event == DisconnectDevice), (event, data) -> {
             removeDevice(sender());
-            sender().tell(Device.Events.AckDisconnectFromCell, self());
+            sender().tell(UE.Events.AckDisconnectFromCell, self());
             return stay();
         }).event(Events.class, (event, state) -> {
             log.error("Unhandled event: {}", event);
