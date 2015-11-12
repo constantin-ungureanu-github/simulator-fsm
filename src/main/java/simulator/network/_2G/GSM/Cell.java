@@ -6,9 +6,9 @@ import static simulator.network.Cell.Events.ConnectToNetwork;
 import static simulator.network.Cell.Events.DisconnectDevice;
 import static simulator.network.Cell.State.Off;
 import static simulator.network.Cell.State.On;
-import simulator.Master;
-import simulator.network.UE;
+import simulator.actors.Master;
 import simulator.network.Network;
+import simulator.network.UE;
 
 public class Cell extends simulator.network.Cell {
     {

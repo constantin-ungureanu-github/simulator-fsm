@@ -5,11 +5,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import simulator.network.NE.Data;
 import simulator.network.NE.State;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 
 public abstract class NE extends AbstractFSM<State, Data> {
+    public class Data {
+    }
+
     public enum State {
         On, Off
     }

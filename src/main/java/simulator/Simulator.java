@@ -1,5 +1,6 @@
 package simulator;
 
+import simulator.actors.Master;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;

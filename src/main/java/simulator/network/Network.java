@@ -10,6 +10,7 @@ import static simulator.network.Network.State.Available;
 import java.util.HashSet;
 import java.util.Set;
 
+import simulator.network.NE.Data;
 import simulator.network.Network.State;
 import simulator.network._2G.GSM.Cell;
 import akka.actor.AbstractFSM;

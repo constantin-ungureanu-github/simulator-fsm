@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import simulator.network.Cell.State;
+import simulator.network.NE.Data;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 
