@@ -62,24 +62,17 @@ public class Subscriber extends AbstractFSM<State, Data> {
         when(Available, matchEventEquals(GoToWork, (state, data) -> goTo(Working)));
         when(Working, matchEventEquals(ReturnFromWork, (state, data) -> goTo(Available)));
 
-        when(Available, matchEvent((event, data) -> (event == SendSMS), (state, data) -> {
-            if (devices.isEmpty())
-                return removeWork();
-            return sendSMS();
-        }).event((event, data) -> (event == MakeVoiceCall), (state, data) -> {
-            if (devices.isEmpty())
-                return removeWork();
-            return makeVoiceCall();
-        }));
+        when(Available,
+                matchEvent((event, data) -> (event == SendSMS), (state, data) -> sendSMS())
+                .event((event, data) -> (event == MakeVoiceCall), (state, data) -> makeVoiceCall()));
 
         // TODO Add rest of events
-        whenUnhandled(matchEvent(Master.Step.class, (step, data) -> {
-            return processStep();
-        }).eventEquals(AddDevice, (state, data) -> {
-            return addDevice();
-        }).eventEquals(RemoveWork, (state, data) -> {
-            return removeWork();
-        }).anyEvent((event, data) -> {
+
+        whenUnhandled(
+                matchEvent(Master.Step.class, (step, data) -> processStep())
+                .eventEquals(AddDevice, (state, data) -> addDevice())
+                .eventEquals(RemoveWork, (state, data) -> removeWork())
+                .anyEvent((event, data) -> {
             log.error("Unhandled event: {}", event);
             return stay();
         }));
@@ -88,6 +81,9 @@ public class Subscriber extends AbstractFSM<State, Data> {
     }
 
     private akka.actor.FSM.State<State, Data> makeVoiceCall() {
+        if (devices.isEmpty())
+            return removeWork();
+
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
             device.tell(UE.Events.MakeVoiceCall, self());
@@ -96,6 +92,9 @@ public class Subscriber extends AbstractFSM<State, Data> {
     }
 
     private akka.actor.FSM.State<State, Data> sendSMS() {
+        if (devices.isEmpty())
+            return removeWork();
+
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
             device.tell(UE.Events.SendSMS, self());
