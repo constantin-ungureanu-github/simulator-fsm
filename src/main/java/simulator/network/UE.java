@@ -76,52 +76,52 @@ public class UE extends AbstractFSM<State, Data> {
     {
         startWith(Off, null);
 
-        when(Off, matchEvent(Events.class, (event, data) -> (event == ConnectToCell), (state, data) -> {
+        when(Off, matchEvent((event, data) -> (event == ConnectToCell), (state, data) -> {
             sender().tell(Cell.Events.ConnectDevice, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == AckConnectToCell), (state, data) -> {
+        }).event((event, data) -> (event == AckConnectToCell), (state, data) -> {
             setCell(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(On);
-        }).event(Events.class, (event, data) -> (event == NAckConnectToCell), (state, data) -> {
+        }).event((event, data) -> (event == NAckConnectToCell), (state, data) -> {
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
         }));
 
-        when(On, matchEvent(Events.class, (event, data) -> (event == NAckConnectToCell), (state, data) -> {
+        when(On, matchEvent((event, data) -> (event == NAckConnectToCell), (state, data) -> {
             setCell(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Off);
-        }).event(Events.class, (event, data) -> (event == DisconnectFromCell), (state, data) -> {
+        }).event((event, data) -> (event == DisconnectFromCell), (state, data) -> {
             getCell().tell(Cell.Events.DisconnectDevice, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == AckDisconnectFromCell), (state, data) -> {
+        }).event((event, data) -> (event == AckDisconnectFromCell), (state, data) -> {
             setCell(null);
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(Off);
-        }).event(Events.class, (event, data) -> (event == SendSMS), (state, data) -> {
+        }).event((event, data) -> (event == SendSMS), (state, data) -> {
             log.info("{} sent SMS using cell {}", self().path().name(), cell.path().name());
             sender().tell(Subscriber.DiscreteEvent.RemoveWork, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == ReceiveSMS), (state, data) -> {
+        }).event((event, data) -> (event == ReceiveSMS), (state, data) -> {
             sender().tell(AckSendSMS, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == AckSendSMS), (state, data) -> {
+        }).event((event, data) -> (event == AckSendSMS), (state, data) -> {
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == NAckSendSMS), (state, data) -> {
+        }).event((event, data) -> (event == NAckSendSMS), (state, data) -> {
             Master.getMaster().tell(Master.Events.Ping, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == MakeVoiceCall), (state, data) -> {
+        }).event((event, data) -> (event == MakeVoiceCall), (state, data) -> {
             log.info("", self().path().name(), cell.path().name());
             sender().tell(Subscriber.DiscreteEvent.RemoveWork, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == ReceiveVoiceCall), (state, data) -> {
+        }).event((event, data) -> (event == ReceiveVoiceCall), (state, data) -> {
             sender().tell(AckMakeVoiceCall, self());
             return stay();
-        }).event(Events.class, (event, data) -> (event == AckMakeVoiceCall), (state, data) -> {
+        }).event((event, data) -> (event == AckMakeVoiceCall), (state, data) -> {
             return stay();
-        }).event(Events.class, (event, data) -> (event == NAckMakeVoiceCall), (state, data) -> {
+        }).event((event, data) -> (event == NAckMakeVoiceCall), (state, data) -> {
             return stay();
         }));
 

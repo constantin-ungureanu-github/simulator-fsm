@@ -75,8 +75,10 @@ public class Master extends UntypedActor {
             getSender().tell(Ping, getSelf());
         } else if (message == Tick) {
             log.info("{}", step);
-            workload.addWork(subscribersNumber);
             Step simulationStep = new Step(step);
+
+            workload.addWork(subscribersNumber);
+
             subscribers.stream().forEach(subscriber -> subscriber.tell(simulationStep, ActorRef.noSender()));
         } else {
             unhandled(message);
@@ -142,9 +144,8 @@ public class Master extends UntypedActor {
     }
 
     private void initializeSubscribers() {
-        workload.addWork(subscribersNumber);
-        // TODO Use all devices and subscribers
-        subscribers.stream().forEach(subscriber -> subscriber.tell(Subscriber.DeviceEvents.AddDevice, devices.get((int) ThreadLocalRandom.current().nextLong(devicesNumber))));
+        workload.addWork(devicesNumber);
+        devices.stream().forEach(device -> subscribers.get((int) ThreadLocalRandom.current().nextLong(subscribersNumber)).tell(Subscriber.DeviceEvents.AddDevice, device));
     }
 
     public static final class Start implements Serializable {
@@ -212,9 +213,5 @@ public class Master extends UntypedActor {
         public void setStep(long step) {
             this.step = step;
         }
-    }
-
-    public ActorRef getRandomDevice() {
-        return devices.get((int) ThreadLocalRandom.current().nextLong(devicesNumber));
     }
 }

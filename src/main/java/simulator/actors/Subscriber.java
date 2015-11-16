@@ -6,6 +6,7 @@ import static simulator.actors.Subscriber.Events.GoToSleep;
 import static simulator.actors.Subscriber.Events.GoToWork;
 import static simulator.actors.Subscriber.Events.ReturnFromWork;
 import static simulator.actors.Subscriber.Events.WakeUp;
+import static simulator.actors.Subscriber.NetworkEvents.MakeVoiceCall;
 import static simulator.actors.Subscriber.NetworkEvents.SendSMS;
 import static simulator.actors.Subscriber.State.Available;
 import static simulator.actors.Subscriber.State.Sleeping;
@@ -61,30 +62,23 @@ public class Subscriber extends AbstractFSM<State, Data> {
         when(Available, matchEventEquals(GoToWork, (state, data) -> goTo(Working)));
         when(Working, matchEventEquals(ReturnFromWork, (state, data) -> goTo(Available)));
 
-        when(Available, matchEventEquals(SendSMS, (state, data) -> {
-            ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
-            if (device != null) {
-                device.tell(UE.Events.SendSMS, self());
-                stay();
-            }
-            return stay();
+        when(Available, matchEvent((event, data) -> (event == SendSMS), (state, data) -> {
+            if (devices.isEmpty())
+                return removeWork();
+            return sendSMS();
+        }).event((event, data) -> (event == MakeVoiceCall), (state, data) -> {
+            if (devices.isEmpty())
+                return removeWork();
+            return makeVoiceCall();
         }));
 
         // TODO Add rest of events
         whenUnhandled(matchEvent(Master.Step.class, (step, data) -> {
-            processStep(step.getStep());
-            return stay();
+            return processStep();
         }).eventEquals(AddDevice, (state, data) -> {
-            devices.add(sender());
-            sender().tell(UE.Events.PickedBySubscriber, self());
-            Master.getMaster().tell(Master.Events.Ping, self());
-            return stay();
+            return addDevice();
         }).eventEquals(RemoveWork, (state, data) -> {
-            workLoad.removeWork();
-            if (workLoad.isWorkDone()) {
-                Master.getMaster().tell(Master.Events.Ping, self());
-            }
-            return stay();
+            return removeWork();
         }).anyEvent((event, data) -> {
             log.error("Unhandled event: {}", event);
             return stay();
@@ -93,9 +87,40 @@ public class Subscriber extends AbstractFSM<State, Data> {
         initialize();
     }
 
-    private void processStep(long step) {
-        // TODO Add work
+    private akka.actor.FSM.State<State, Data> makeVoiceCall() {
+        ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
+        if (device != null) {
+            device.tell(UE.Events.MakeVoiceCall, self());
+        }
+        return stay();
+    }
+
+    private akka.actor.FSM.State<State, Data> sendSMS() {
+        ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
+        if (device != null) {
+            device.tell(UE.Events.SendSMS, self());
+        }
+        return stay();
+    }
+
+    private akka.actor.FSM.State<State, Data> processStep() {
         workLoad.addWork();
         self().tell(SendSMS, self());
+        return stay();
+    }
+
+    private akka.actor.FSM.State<State, Data> addDevice() {
+        devices.add(sender());
+        sender().tell(UE.Events.PickedBySubscriber, self());
+        Master.getMaster().tell(Master.Events.Ping, self());
+        return stay();
+    }
+
+    private akka.actor.FSM.State<State, Data> removeWork() {
+        workLoad.removeWork();
+        if (workLoad.isWorkDone()) {
+            Master.getMaster().tell(Master.Events.Ping, self());
+        }
+        return stay();
     }
 }
