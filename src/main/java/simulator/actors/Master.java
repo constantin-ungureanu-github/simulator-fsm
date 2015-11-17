@@ -14,12 +14,12 @@ import org.apache.logging.log4j.core.async.AsyncLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.network.Network;
-import simulator.network.UE;
-import simulator.utils.WorkLoad;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import simulator.network.Network;
+import simulator.network.UE;
+import simulator.utils.WorkLoad;
 
 public class Master extends UntypedActor {
     private static Logger log = LoggerFactory.getLogger(Master.class);
@@ -74,7 +74,7 @@ public class Master extends UntypedActor {
             workload.addWork();
             getSender().tell(Ping, getSelf());
         } else if (message == Tick) {
-            log.info("{}", step);
+            log.info("Step {}", step);
             Step simulationStep = new Step(step);
 
             workload.addWork(subscribersNumber);

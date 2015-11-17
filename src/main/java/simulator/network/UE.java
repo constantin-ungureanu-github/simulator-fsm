@@ -20,21 +20,19 @@ import static simulator.network.UE.State.On;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import akka.actor.AbstractFSM;
+import akka.actor.ActorRef;
 import simulator.actors.Master;
 import simulator.actors.Subscriber;
 import simulator.network.NE.Data;
 import simulator.network.UE.State;
 import simulator.network._2G.GSM.Cell;
-import akka.actor.AbstractFSM;
-import akka.actor.ActorRef;
 
 public class UE extends AbstractFSM<State, Data> {
     private static Logger log = LoggerFactory.getLogger(UE.class);
 
     public enum State {
-        Off,
-        On,
-        Airplane
+        Off, On, Airplane, InCall, InDataSession
     }
 
     public enum Events {
@@ -51,7 +49,10 @@ public class UE extends AbstractFSM<State, Data> {
         MakeVoiceCall,
         ReceiveVoiceCall,
         AckMakeVoiceCall,
-        NAckMakeVoiceCall
+        NAckMakeVoiceCall,
+        RequestDataSession,
+        AckRequestDataSession,
+        NAckRequestDataSession
     }
 
     private ActorRef cell;

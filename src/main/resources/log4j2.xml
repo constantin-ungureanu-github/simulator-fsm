@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
 	<Appenders>
-		<RollingRandomAccessFile name="File" fileName="csv/output.csv" filePattern="csv/%d{yyyy-MM-dd-HH-mm-ss-SSS}.csv.gz" immediateFlush="false" append="false">
+		<RollingRandomAccessFile name="CSV" fileName="csv/output.csv" filePattern="csv/%d{yyyy-MM-dd-HH-mm-ss-SSS}.csv.gz" immediateFlush="false" append="false">
 			<CsvParameterLayout delimiter="," header="DEVICE,CELL${sys:line.separator}" />
 			<Policies>
 				<SizeBasedTriggeringPolicy size="10 MB" />
 			</Policies>
 		</RollingRandomAccessFile>
 		<Console name="Console" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{HH:mm:ss.SSS} %logger{36} - %msg%n" />
 		</Console>
+        <RandomAccessFile name="WorkLog" fileName="work.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %logger{36} - %msg%n" />
+        </RandomAccessFile>
 	</Appenders>
 	<Loggers>
 		<Logger name="simulator.actors.Master" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="Console" />
 		</Logger>
+		<Logger name="simulator.actors.Subscriber" level="info" includeLocation="false" additivity="false">
+			<AppenderRef ref="WorkLog" />
+		</Logger>
 		<Logger name="simulator.network" level="info" includeLocation="false" additivity="false">
-			<AppenderRef ref="File" />
+			<AppenderRef ref="CSV" />
 		</Logger>
 		<Root level="info" includeLocation="false">
 			<AppenderRef ref="Console" />
