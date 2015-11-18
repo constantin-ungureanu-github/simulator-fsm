@@ -1,11 +1,11 @@
 package simulator.network._4G.LTE;
 
-import static simulator.network.NE.State.On;
+import static simulator.abstracts.NE.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.network.NE;
+import simulator.abstracts.NE;
 import simulator.network._4G.LTE.Interfaces.Gx;
 
 public class HSS extends NE {

@@ -1,21 +1,16 @@
-package simulator.network;
+package simulator.abstracts;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import simulator.network.NE.Data;
-import simulator.network.NE.State;
-import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 
-public abstract class NE extends AbstractFSM<State, Data> {
-    public class Data {
-    }
-
-    public enum State {
-        On, Off
+public abstract class NE extends Actor {
+    public enum State implements TemplateState {
+        On,
+        Off
     }
 
     private Map<ActorRef, ActorRef> registeredNE = new HashMap<>();
@@ -37,15 +32,15 @@ public abstract class NE extends AbstractFSM<State, Data> {
         registeredNE = new HashMap<>();
     }
 
-    protected void activateNE(ActorRef value){
+    protected void activateNE(ActorRef value) {
         activeNE.add(value);
     }
 
-    protected void deActivateNE(ActorRef value){
+    protected void deActivateNE(ActorRef value) {
         activeNE.remove(value);
     }
 
-    protected void deActivateAllNE(ActorRef value){
+    protected void deActivateAllNE(ActorRef value) {
         activeNE = new HashSet<>();
     }
 }

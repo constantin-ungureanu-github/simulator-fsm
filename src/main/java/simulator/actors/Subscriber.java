@@ -15,52 +15,43 @@ import static simulator.actors.Subscriber.SubscriberEvents.ReturnFromWork;
 import static simulator.actors.Subscriber.SubscriberEvents.WakeUp;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
-import simulator.actors.Subscriber.State;
-import simulator.network.NE.Data;
+import simulator.abstracts.Actor;
+import simulator.abstracts.TemplateData;
+import simulator.abstracts.TemplateEvents;
+import simulator.abstracts.TemplateState;
 import simulator.network.UE;
-import simulator.utils.WorkLoad;
 
-public class Subscriber extends AbstractFSM<State, Data> {
+public class Subscriber extends Actor {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
 
-    public enum State {
+    public enum State implements TemplateState {
         Sleeping, Working, Available, Unavailable, Walking, Flying
     }
 
-    interface Events {}
-
-    public enum SubscriberEvents implements Events {
+    public enum SubscriberEvents implements TemplateEvents {
         WakeUp, GoToSleep, ReturnFromWork, GoToWork
     }
 
-    public enum DeviceEvents implements Events {
+    public enum DeviceEvents implements TemplateEvents {
         AddDevice, RemoveDevice
     }
 
-    public enum DiscreteEvent implements Events {
+    public enum DiscreteEvent implements TemplateEvents {
         RemoveWork
     }
 
-    public enum NetworkEvents implements Events {
+    public enum NetworkEvents implements TemplateEvents {
         SendSMS, MakeVoiceCall, RequestDataSession
     }
 
     private List<ActorRef> devices = new ArrayList<ActorRef>();
-    private Map<Long, Set<Events>> workMap = new HashMap<>();
-    private WorkLoad workLoad = new WorkLoad();
-    private Long step;
 
     {
         startWith(Available, null);
@@ -87,7 +78,7 @@ public class Subscriber extends AbstractFSM<State, Data> {
                 .event(NetworkEvents.class, (event, data) -> (event == RequestDataSession), (state, data) -> requestDataSession()));
 
         whenUnhandled(
-                matchEvent(Master.Step.class, (step, data) -> addWork(step.getStep()))
+                matchEvent(Master.Step.class, (step, data) -> processStep(step.getStep()))
                 .eventEquals(AddDevice, (state, data) -> addDevice())
                 .eventEquals(RemoveDevice, (state, data) -> removeDevice())
                 .eventEquals(RemoveWork, (state, data) -> removeWork())
@@ -99,59 +90,53 @@ public class Subscriber extends AbstractFSM<State, Data> {
         initialize();
     }
 
-    private akka.actor.FSM.State<State, Data> addWork(Long step) {
-        setStep(step);
+    @Override
+    protected void scheduleCurrentWork() {
+        super.scheduleCurrentWork();
 
-        scheduleCurrentWork();
-        return stay();
-    }
-
-    private void scheduleCurrentWork() {
-        if (workMap.containsKey(step)) {
-            for (Events event : workMap.get(step)) {
-                workLoad.addWork();
-                self().tell(event, ActorRef.noSender());
-            }
-            workMap.remove(step);
-        };
-
-        workLoad.addWork();
+        addWork();
         self().tell(SendSMS, ActorRef.noSender());
     }
 
-    private akka.actor.FSM.State<State, Data> removeWork() {
-        workLoad.removeWork();
-        if (workLoad.isWorkDone()) {
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-        }
+    private akka.actor.FSM.State<TemplateState, TemplateData> addDevice() {
+        devices.add(sender());
+        sender().tell(UE.Events.PickedBySubscriber, self());
+        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
-    private akka.actor.FSM.State<State, Data> processWakeUp() {
-        scheduleEvent(step + ThreadLocalRandom.current().nextInt(50, 60), GoToSleep);
+    private akka.actor.FSM.State<TemplateState, TemplateData> removeDevice() {
+        devices.remove(sender());
+        sender().tell(UE.Events.PickedBySubscriber, self());
+        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        return stay();
+    }
+
+    private akka.actor.FSM.State<TemplateState, TemplateData> processWakeUp() {
+        scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(50, 60), GoToSleep);
         log.info("{} woke up.", self().path().name());
         removeWork();
         return goTo(Available);
     }
 
-    private akka.actor.FSM.State<State, Data> processGoToSleep() {
-        scheduleEvent(step + ThreadLocalRandom.current().nextInt(20, 30), WakeUp);
+    private akka.actor.FSM.State<TemplateState, TemplateData> processGoToSleep() {
+        scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(20, 30), WakeUp);
         log.info("{} went to sleep.", self().path().name());
         removeWork();
         return goTo(Sleeping);
     }
 
-    private akka.actor.FSM.State<State, Data> processGoToWork() {
+    private akka.actor.FSM.State<TemplateState, TemplateData> processGoToWork() {
         removeWork();
         return goTo(Working);
     }
 
-    private akka.actor.FSM.State<State, Data> processReturnFromWork() {
+    private akka.actor.FSM.State<TemplateState, TemplateData> processReturnFromWork() {
         removeWork();
         return goTo(Available);
     }
 
-    private akka.actor.FSM.State<State, Data> sendSMS() {
+    private akka.actor.FSM.State<TemplateState, TemplateData> sendSMS() {
         if (devices.isEmpty())
             return removeWork();
 
@@ -161,7 +146,7 @@ public class Subscriber extends AbstractFSM<State, Data> {
         return stay();
     }
 
-    private akka.actor.FSM.State<State, Data> makeVoiceCall() {
+    private akka.actor.FSM.State<TemplateState, TemplateData> makeVoiceCall() {
         if (devices.isEmpty())
             return removeWork();
 
@@ -172,7 +157,7 @@ public class Subscriber extends AbstractFSM<State, Data> {
         return stay();
     }
 
-    private akka.actor.FSM.State<State, Data> requestDataSession() {
+    private akka.actor.FSM.State<TemplateState, TemplateData> requestDataSession() {
         if (devices.isEmpty())
             return removeWork();
 
@@ -181,40 +166,5 @@ public class Subscriber extends AbstractFSM<State, Data> {
             device.tell(UE.Events.RequestDataSession, self());
         }
         return stay();
-    }
-
-    private akka.actor.FSM.State<State, Data> addDevice() {
-        devices.add(sender());
-        sender().tell(UE.Events.PickedBySubscriber, self());
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-        return stay();
-    }
-
-    private akka.actor.FSM.State<State, Data> removeDevice() {
-        devices.remove(sender());
-        sender().tell(UE.Events.PickedBySubscriber, self());
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-        return stay();
-    }
-
-    private void setStep(Long step) {
-        this.step = step;
-    }
-
-    private void scheduleEvent(Long step, Events event) {
-        Set<Events> events = getWorkMapEvents(step);
-
-        events.add(event);
-    }
-
-    private Set<Events> getWorkMapEvents(Long step) {
-        Set<Events> events;
-        if (workMap.containsKey(step)) {
-            events = workMap.get(step);
-        } else {
-            events = new HashSet<>();
-            workMap.put(step, events);
-        }
-        return events;
     }
 }

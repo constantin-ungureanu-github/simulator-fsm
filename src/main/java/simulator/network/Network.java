@@ -1,27 +1,28 @@
 package simulator.network;
 
-import static simulator.network.Network.Events.ConnectCell;
-import static simulator.network.Network.Events.DisconnectCell;
-import static simulator.network.Network.Events.RegisterDevice;
-import static simulator.network.Network.Events.Routing;
-import static simulator.network.Network.Events.UnregisterDevice;
+import static simulator.network.Network.NetworkEvents.ConnectCell;
+import static simulator.network.Network.NetworkEvents.DisconnectCell;
+import static simulator.network.Network.NetworkEvents.RegisterDevice;
+import static simulator.network.Network.NetworkEvents.Routing;
+import static simulator.network.Network.NetworkEvents.UnregisterDevice;
 import static simulator.network.Network.State.Available;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import simulator.network.NE.Data;
-import simulator.network.Network.State;
-import simulator.network._2G.GSM.Cell;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
+import simulator.abstracts.TemplateData;
+import simulator.abstracts.TemplateEvents;
+import simulator.network.Network.State;
+import simulator.network._2G.GSM.Cell;
 
-public class Network extends AbstractFSM<State, Data> {
+public class Network extends AbstractFSM<State, TemplateData> {
     public enum State {
         Available
     }
 
-    public enum Events {
+    public enum NetworkEvents implements TemplateEvents {
         ConnectCell,
         DisconnectCell,
         RegisterDevice,

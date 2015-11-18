@@ -77,9 +77,9 @@ public class Master extends UntypedActor {
             log.info("Step {}", step);
             Step simulationStep = new Step(step);
 
-            workload.addWork(subscribersNumber);
-
+            workload.addWork(subscribersNumber + devicesNumber);
             subscribers.stream().forEach(subscriber -> subscriber.tell(simulationStep, ActorRef.noSender()));
+            devices.stream().forEach(device -> device.tell(simulationStep, ActorRef.noSender()));
         } else {
             unhandled(message);
         }
@@ -115,7 +115,7 @@ public class Master extends UntypedActor {
                 }
             } else {
                 if (ThreadLocalRandom.current().nextInt(100) < 50) {
-                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.eNodeB.class), "4G.LTE.Cell_" + i));
+                    cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.ENodeB.class), "4G.LTE.Cell_" + i));
                 } else {
                     cells.add(context().system().actorOf(Props.create(simulator.network._4G.LTE.VoLTE.ENodeB.class), "4G.VoLTE.Cell_" + i));
                 }
@@ -135,7 +135,7 @@ public class Master extends UntypedActor {
 
     private void initializeCells() {
         workload.addWork(cellsNumber);
-        cells.stream().forEach(cell -> cell.tell(simulator.network.Cell.Events.ConnectToNetwork, network));
+        cells.stream().forEach(cell -> cell.tell(simulator.abstracts.Cell.Events.ConnectToNetwork, network));
     }
 
     private void initializeDevices() {

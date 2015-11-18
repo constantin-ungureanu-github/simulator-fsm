@@ -1,22 +1,28 @@
 package simulator.network._4G.LTE.VoLTE;
 
-import static simulator.network.Cell.Events.ConnectCellAck;
-import static simulator.network.Cell.Events.ConnectDevice;
-import static simulator.network.Cell.Events.ConnectToNetwork;
-import static simulator.network.Cell.Events.DisconnectDevice;
-import static simulator.network.Cell.State.Off;
-import static simulator.network.Cell.State.On;
+import static simulator.abstracts.Cell.Events.ConnectCellAck;
+import static simulator.abstracts.Cell.Events.ConnectDevice;
+import static simulator.abstracts.Cell.Events.ConnectToNetwork;
+import static simulator.abstracts.Cell.Events.DisconnectDevice;
+import static simulator.abstracts.Cell.State.Off;
+import static simulator.abstracts.Cell.State.On;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import simulator.abstracts.Cell;
 import simulator.actors.Master;
-import simulator.network.Cell;
 import simulator.network.Network;
 import simulator.network.UE;
 
 public class ENodeB extends Cell {
+    private static Logger log = LoggerFactory.getLogger(ENodeB.class);
+
     {
         startWith(Off, null);
 
         when(Off, matchEvent(Events.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
-            sender().tell(Network.Events.ConnectCell, self());
+            sender().tell(Network.NetworkEvents.ConnectCell, self());
             return stay();
         }).event(Events.class, (event, data) -> (event == ConnectCellAck), (event, data) -> {
             setNetwork(sender());
