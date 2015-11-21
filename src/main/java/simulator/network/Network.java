@@ -1,10 +1,12 @@
 package simulator.network;
 
-import static simulator.network.Network.NetworkEvents.ConnectCell;
-import static simulator.network.Network.NetworkEvents.DisconnectCell;
-import static simulator.network.Network.NetworkEvents.RegisterDevice;
-import static simulator.network.Network.NetworkEvents.Routing;
-import static simulator.network.Network.NetworkEvents.UnregisterDevice;
+import static simulator.actors.events.CellEvents.ConnectCellAck;
+import static simulator.actors.events.CellEvents.DisconnectFromNetwork;
+import static simulator.actors.events.NetworkEvents.ConnectCell;
+import static simulator.actors.events.NetworkEvents.DisconnectCell;
+import static simulator.actors.events.NetworkEvents.RegisterDevice;
+import static simulator.actors.events.NetworkEvents.Routing;
+import static simulator.actors.events.NetworkEvents.UnregisterDevice;
 import static simulator.network.Network.State.Available;
 
 import java.util.HashSet;
@@ -12,22 +14,15 @@ import java.util.Set;
 
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
-import simulator.abstracts.TemplateData;
-import simulator.abstracts.TemplateEvents;
+import simulator.network.Network.Data;
 import simulator.network.Network.State;
-import simulator.network._2G.GSM.Cell;
 
-public class Network extends AbstractFSM<State, TemplateData> {
-    public enum State {
+public class Network extends AbstractFSM<State, Data> {
+    public enum State implements simulator.actors.interfaces.TemplateState {
         Available
     }
 
-    public enum NetworkEvents implements TemplateEvents {
-        ConnectCell,
-        DisconnectCell,
-        RegisterDevice,
-        UnregisterDevice,
-        Routing
+    public class Data implements simulator.actors.interfaces.TemplateData {
     }
 
     private Set<ActorRef> cells = new HashSet<>();
@@ -45,23 +40,23 @@ public class Network extends AbstractFSM<State, TemplateData> {
 
         when(Available, matchEventEquals(ConnectCell, (state, data) -> {
             addCell(sender());
-            sender().tell(Cell.Events.ConnectCellAck, self());
+            sender().tell(ConnectCellAck, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(DisconnectCell, (state, data) -> {
             removeCell(sender());
-            sender().tell(Cell.Events.DisconnectFromNetwork, self());
+            sender().tell(DisconnectFromNetwork, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(RegisterDevice, (state, data) -> {
-            sender().tell(Cell.Events.ConnectCellAck, self());
+            sender().tell(ConnectCellAck, self());
             return stay();
         }));
 
         when(Available, matchEventEquals(UnregisterDevice, (state, data) -> {
-            sender().tell(Cell.Events.DisconnectFromNetwork, self());
+            sender().tell(DisconnectFromNetwork, self());
             return stay();
         }));
 

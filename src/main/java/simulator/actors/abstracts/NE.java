@@ -1,4 +1,4 @@
-package simulator.abstracts;
+package simulator.actors.abstracts;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -6,11 +6,13 @@ import java.util.Map;
 import java.util.Set;
 
 import akka.actor.ActorRef;
+import simulator.actors.abstracts.NE.State;
+import simulator.actors.interfaces.TemplateData;
+import simulator.actors.interfaces.TemplateState;
 
-public abstract class NE extends Actor {
+public abstract class NE extends Actor<State, TemplateData> {
     public enum State implements TemplateState {
-        On,
-        Off
+        On, Off
     }
 
     private Map<ActorRef, ActorRef> registeredNE = new HashMap<>();

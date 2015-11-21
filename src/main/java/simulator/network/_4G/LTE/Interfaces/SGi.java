@@ -1,6 +1,7 @@
 package simulator.network._4G.LTE.Interfaces;
 
-public enum SGi {
-    Event1,
-    Event2
+import simulator.actors.interfaces.TemplateEvents;
+
+public enum SGi implements TemplateEvents {
+    Event1, Event2
 }

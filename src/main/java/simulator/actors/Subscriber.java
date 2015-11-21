@@ -1,18 +1,19 @@
 package simulator.actors;
 
-import static simulator.actors.Subscriber.DeviceEvents.AddDevice;
-import static simulator.actors.Subscriber.DeviceEvents.RemoveDevice;
-import static simulator.actors.Subscriber.DiscreteEvent.RemoveWork;
-import static simulator.actors.Subscriber.NetworkEvents.MakeVoiceCall;
-import static simulator.actors.Subscriber.NetworkEvents.RequestDataSession;
-import static simulator.actors.Subscriber.NetworkEvents.SendSMS;
 import static simulator.actors.Subscriber.State.Available;
 import static simulator.actors.Subscriber.State.Sleeping;
 import static simulator.actors.Subscriber.State.Working;
-import static simulator.actors.Subscriber.SubscriberEvents.GoToSleep;
-import static simulator.actors.Subscriber.SubscriberEvents.GoToWork;
-import static simulator.actors.Subscriber.SubscriberEvents.ReturnFromWork;
-import static simulator.actors.Subscriber.SubscriberEvents.WakeUp;
+import static simulator.actors.events.DeviceEvents.AddDevice;
+import static simulator.actors.events.DeviceEvents.PickedBySubscriber;
+import static simulator.actors.events.DeviceEvents.RemoveDevice;
+import static simulator.actors.events.DiscreteEvent.RemoveWork;
+import static simulator.actors.events.NetworkEvents.MakeVoiceCall;
+import static simulator.actors.events.NetworkEvents.RequestDataSession;
+import static simulator.actors.events.NetworkEvents.SendSMS;
+import static simulator.actors.events.SubscriberEvents.GoToSleep;
+import static simulator.actors.events.SubscriberEvents.GoToWork;
+import static simulator.actors.events.SubscriberEvents.ReturnFromWork;
+import static simulator.actors.events.SubscriberEvents.WakeUp;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,33 +23,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
-import simulator.abstracts.Actor;
-import simulator.abstracts.TemplateData;
-import simulator.abstracts.TemplateEvents;
-import simulator.abstracts.TemplateState;
-import simulator.network.UE;
+import simulator.actors.Subscriber.Data;
+import simulator.actors.Subscriber.State;
+import simulator.actors.abstracts.Actor;
+import simulator.actors.events.DeviceEvents;
+import simulator.actors.events.NetworkEvents;
+import simulator.actors.interfaces.TemplateData;
+import simulator.actors.interfaces.TemplateState;
 
-public class Subscriber extends Actor {
+public class Subscriber extends Actor<State, Data> {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
 
-    public enum State implements TemplateState {
+    public enum State implements simulator.actors.interfaces.TemplateState {
         Sleeping, Working, Available, Unavailable, Walking, Flying
     }
 
-    public enum SubscriberEvents implements TemplateEvents {
-        WakeUp, GoToSleep, ReturnFromWork, GoToWork
-    }
-
-    public enum DeviceEvents implements TemplateEvents {
-        AddDevice, RemoveDevice
-    }
-
-    public enum DiscreteEvent implements TemplateEvents {
-        RemoveWork
-    }
-
-    public enum NetworkEvents implements TemplateEvents {
-        SendSMS, MakeVoiceCall, RequestDataSession
+    public class Data implements simulator.actors.interfaces.TemplateData {
     }
 
     private List<ActorRef> devices = new ArrayList<ActorRef>();
@@ -100,14 +90,14 @@ public class Subscriber extends Actor {
 
     private akka.actor.FSM.State<TemplateState, TemplateData> addDevice() {
         devices.add(sender());
-        sender().tell(UE.Events.PickedBySubscriber, self());
+        sender().tell(PickedBySubscriber, self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
     private akka.actor.FSM.State<TemplateState, TemplateData> removeDevice() {
         devices.remove(sender());
-        sender().tell(UE.Events.PickedBySubscriber, self());
+        sender().tell(PickedBySubscriber, self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
@@ -141,7 +131,7 @@ public class Subscriber extends Actor {
             return removeWork();
 
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
-        device.tell(UE.Events.SendSMS, self());
+        device.tell(DeviceEvents.SendSMS, self());
 
         return stay();
     }
@@ -152,7 +142,7 @@ public class Subscriber extends Actor {
 
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
-            device.tell(UE.Events.MakeVoiceCall, self());
+            device.tell(DeviceEvents.MakeVoiceCall, self());
         }
         return stay();
     }
@@ -163,7 +153,7 @@ public class Subscriber extends Actor {
 
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
-            device.tell(UE.Events.RequestDataSession, self());
+            device.tell(DeviceEvents.RequestDataSession, self());
         }
         return stay();
     }

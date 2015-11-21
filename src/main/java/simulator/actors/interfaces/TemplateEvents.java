@@ -1,4 +1,4 @@
-package simulator.abstracts;
+package simulator.actors.interfaces;
 
 public interface TemplateEvents {
 }

@@ -1,4 +1,4 @@
-package simulator.abstracts;
+package simulator.actors.abstracts;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,9 +8,12 @@ import java.util.Set;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 import simulator.actors.Master;
+import simulator.actors.interfaces.TemplateData;
+import simulator.actors.interfaces.TemplateEvents;
+import simulator.actors.interfaces.TemplateState;
 import simulator.utils.WorkLoad;
 
-public abstract class Actor extends AbstractFSM<TemplateState, TemplateData> {
+public abstract class Actor<State extends TemplateState, Data extends TemplateData> extends AbstractFSM<TemplateState, TemplateData> {
     private Map<Long, Set<TemplateEvents>> workMap = new HashMap<>();
     private WorkLoad workLoad = new WorkLoad();
     private Long step;
@@ -26,16 +29,16 @@ public abstract class Actor extends AbstractFSM<TemplateState, TemplateData> {
         return stay();
     }
 
-    protected void addWork() {
-        workLoad.addWork();
-    }
-
     protected akka.actor.FSM.State<TemplateState, TemplateData> removeWork() {
         workLoad.removeWork();
         if (workLoad.isWorkDone()) {
             Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         }
         return stay();
+    }
+
+    protected void addWork() {
+        workLoad.addWork();
     }
 
     protected void scheduleCurrentWork() {

@@ -1,11 +1,11 @@
 package simulator.network._4G.LTE;
 
-import static simulator.abstracts.NE.State.On;
+import static simulator.actors.abstracts.NE.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import simulator.abstracts.NE;
+import simulator.actors.abstracts.NE;
 import simulator.network._4G.LTE.Interfaces.S11;
 
 public class MME extends NE {

@@ -1,4 +1,4 @@
-package simulator.abstracts;
+package simulator.actors.abstracts;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -6,19 +6,6 @@ import java.util.Set;
 import akka.actor.ActorRef;
 
 public abstract class Cell extends NE {
-    public enum State implements TemplateState {
-        On,
-        Off
-    }
-
-    public enum Events implements TemplateEvents {
-        ConnectToNetwork,
-        DisconnectFromNetwork,
-        ConnectDevice,
-        DisconnectDevice,
-        ConnectCellAck
-    }
-
     private Set<ActorRef> devices = new HashSet<>();
     private ActorRef network;
 
