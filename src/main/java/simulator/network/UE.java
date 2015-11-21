@@ -29,7 +29,6 @@ import simulator.actors.events.DeviceEvents.PowerOn;
 import simulator.actors.events.DeviceEvents.ReceiveSMS;
 import simulator.actors.events.DeviceEvents.ReceiveVoiceCall;
 import simulator.actors.events.DeviceEvents.SendSMS;
-import simulator.actors.events.DiscreteEvent;
 import simulator.actors.events.DiscreteEvent.RemoveWork;
 
 public class UE extends Actor {
@@ -45,67 +44,105 @@ public class UE extends Actor {
         startWith(On, null);
         scheduleEvent((long) ThreadLocalRandom.current().nextInt(1, 20), new PowerOff());
 
-        when(Off, matchEvent(PowerOn.class, (state, data) -> processPowerOn()));
-        when(On, matchEvent(PowerOff.class, (state, data) -> processPowerOff()));
+        when(Off,
+                matchEvent(PowerOn.class, (state, data) -> processPowerOn())
+                .event(SendSMS.class, (event, data) -> stayAndSendAck())
+                .event(MakeVoiceCall.class, (state, data) -> stayAndSendAck()));
+        when(On,
+                matchEvent(PowerOff.class, (state, data) -> processPowerOff())
+                .event(ConnectToCell.class, (state, data) -> processConnectToCell())
+                .event(AckConnectToCell.class, (state, data) -> processAckConnectToCell())
+                .event(NAckConnectToCell.class, (event, data) -> processNAckConnectToCell())
+                .event(DisconnectFromCell.class, (event, data) -> processDisconnectFromCell())
+                .event(AckDisconnectFromCell.class, (event, data) -> processAckDisconnectFromCell())
+                .event(SendSMS.class, (event, data) -> processSendSMS())
+                .event(ReceiveSMS.class, (event, data) -> processReceiveSMS())
+                .event(AckSendSMS.class, (event, data) -> processAckSendSMS())
+                .event(NAckSendSMS.class, (state, data) -> processNAckSendSMS())
+                .event(MakeVoiceCall.class, (state, data) -> processMakeVoiceCall())
+                .event(ReceiveVoiceCall.class, (state, data) -> processReceiveVoiceCall())
+                .event(AckMakeVoiceCall.class, (state, data) -> processAckMakeVoiceCall())
+                .event(NAckMakeVoiceCall.class, (state, data) -> processNAckMakeVoiceCall()));
 
-        when(On, matchEvent(ConnectToCell.class, (state, data) -> processConnectToCell())
-        .event(AckConnectToCell.class, (state, data) -> {
-            setCell(sender());
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-            return stay();
-        }).event(NAckConnectToCell.class, (event, data) -> {
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-            return stay();
-        }).event(DisconnectFromCell.class, (event, data) -> {
-            getCell().tell(new DisconnectDevice(), self());
-            return stay();
-        }).event(AckDisconnectFromCell.class, (event, data) -> {
-            setCell(null);
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-            return stay();
-        }).event(SendSMS.class, (event, data) -> {
-            log.info("", self().path().name(), cell.path().name());
-            sender().tell(new RemoveWork(), self());
-            return stay();
-        }).event(ReceiveSMS.class, (event, data) -> {
-            sender().tell(new AckSendSMS(), self());
-            return stay();
-        }).event(AckSendSMS.class, (event, data) -> {
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-            return stay();
-        }).event(NAckSendSMS.class, (state, data) -> {
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
-            return stay();
-        }).event(MakeVoiceCall.class, (state, data) -> {
-            log.info("", self().path().name(), cell.path().name());
-            sender().tell(new RemoveWork(), self());
-            return stay();
-        }).event(ReceiveVoiceCall.class, (state, data) -> {
-            sender().tell(new AckMakeVoiceCall(), self());
-            return stay();
-        }).event(AckMakeVoiceCall.class, (state, data) -> {
-            return stay();
-        }).event(NAckMakeVoiceCall.class, (state, data) -> {
-            return stay();
-        }));
-
-        when(Off, matchEvent(SendSMS.class, (event, data) -> {
-            sender().tell(new DiscreteEvent.RemoveWork(null, null, null), self());
-            return stay();
-        }).event(MakeVoiceCall.class, (state, data) -> {
-            sender().tell(new DiscreteEvent.RemoveWork(null, null, null), self());
-            return stay();
-        }));
-
-        whenUnhandled(matchEvent(PickedBySubscriber.class, (state, data) -> {
-            setSubscriber(sender());
-            return stay();
-        }).event(Master.Step.class, (step, data) -> processStep(step.getStep())).anyEvent((event, data) -> {
-            log.error("Unhandled event: {}", event);
-            return stay();
-        }));
+        whenUnhandled(
+                matchEvent(PickedBySubscriber.class, (event, data) -> processPickedBySubscriber())
+                .event(Master.Step.class, (step, data) -> processStep(step.getStep()))
+                .anyEvent((event, data) -> processUnhandledEvent(event)));
 
         initialize();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processUnhandledEvent(Object event) {
+        log.error("Unhandled event: {}", event);
+        return stay();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processPickedBySubscriber() {
+        setSubscriber(sender());
+        return stay();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> stayAndSendAck() {
+        sender().tell(new RemoveWork(), self());
+        return stay();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processNAckMakeVoiceCall() {
+        return stay();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckMakeVoiceCall() {
+        return processNAckMakeVoiceCall();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processReceiveVoiceCall() {
+        sender().tell(new AckMakeVoiceCall(), self());
+        return processAckMakeVoiceCall();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processMakeVoiceCall() {
+        log.info("", self().path().name(), cell.path().name());
+        sender().tell(new RemoveWork(), self());
+        return processAckMakeVoiceCall();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processNAckSendSMS() {
+        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        return processAckMakeVoiceCall();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckSendSMS() {
+        return processNAckSendSMS();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processReceiveSMS() {
+        sender().tell(new AckSendSMS(), self());
+        return processAckMakeVoiceCall();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processSendSMS() {
+        log.info("", self().path().name(), cell.path().name());
+        sender().tell(new RemoveWork(), self());
+        return processAckMakeVoiceCall();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckDisconnectFromCell() {
+        setCell(null);
+        return processAckSendSMS();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processDisconnectFromCell() {
+        getCell().tell(new DisconnectDevice(), self());
+        return processAckMakeVoiceCall();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processNAckConnectToCell() {
+        return processAckSendSMS();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckConnectToCell() {
+        setCell(sender());
+        return processNAckConnectToCell();
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processPowerOn() {
@@ -122,7 +159,7 @@ public class UE extends Actor {
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectToCell() {
         sender().tell(new ConnectDevice(), self());
-        return stay();
+        return processAckMakeVoiceCall();
     }
 
     public ActorRef getCell() {

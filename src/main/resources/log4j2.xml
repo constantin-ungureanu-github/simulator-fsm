@@ -10,9 +10,9 @@
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} %logger{36} - %msg%n" />
 		</Console>
-        <RandomAccessFile name="WorkLog" fileName="work.log">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} %logger{36} - %msg%n" />
-        </RandomAccessFile>
+		<RandomAccessFile name="WorkLog" fileName="work.log" immediateFlush="true" append="false">
+			<PatternLayout pattern="%d{HH:mm:ss.SSS} %logger{36} - %msg%n" />
+		</RandomAccessFile>
 	</Appenders>
 	<Loggers>
 		<Logger name="simulator.actors.Master" level="info" includeLocation="false" additivity="false">

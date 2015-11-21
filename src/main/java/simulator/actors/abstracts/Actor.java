@@ -13,7 +13,7 @@ import simulator.utils.WorkLoad;
 
 public abstract class Actor extends AbstractFSM<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> {
     private Map<Long, Set<Events>> workMap = new HashMap<>();
-    private WorkLoad workLoad = new WorkLoad();
+    protected WorkLoad workLoad = new WorkLoad();
     private Long step;
 
     protected akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processStep(Long step) {
