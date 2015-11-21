@@ -15,10 +15,8 @@ public class HSS extends NE {
         startWith(On, null);
 
         when(On, matchEvent(Gx.class, (event, data) -> (event == Gx.Event1), (state, data) -> {
-            // TODO
             return stay();
         }).event(Gx.class, (event, data) -> (event == Gx.Event2), (event, data) -> {
-            // TODO
             return stay();
         }).event(Gx.class, (event, state) -> {
             log.error("Unhandled event: {}", event);

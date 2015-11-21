@@ -15,10 +15,10 @@ public class MME extends NE {
         startWith(On, null);
 
         when(On, matchEvent(S11.class, (event, data) -> (event == S11.Event1), (state, data) -> {
-                return stay();
-            }).event(S11.class, (event, data) -> (event == S11.Event2), (event, data) -> {
-                return stay();
-            }).event(S11.class, (event, state) -> {
+            return stay();
+        }).event(S11.class, (event, data) -> (event == S11.Event2), (event, data) -> {
+            return stay();
+        }).event(S11.class, (event, state) -> {
             log.error("Unhandled event: {}", event);
             return stay();
         }));

@@ -31,19 +31,12 @@ import akka.actor.ActorRef;
 import simulator.actors.Master;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.DeviceEvents;
-import simulator.actors.interfaces.ActorData;
-import simulator.actors.interfaces.ActorState;
-import simulator.network.UE.Data;
-import simulator.network.UE.State;
 
-public class UE extends Actor<State, Data> {
+public class UE extends Actor {
     private static Logger log = LoggerFactory.getLogger(UE.class);
 
-    public enum State implements simulator.actors.interfaces.ActorState {
+    public enum State implements simulator.actors.interfaces.State {
         Off, On, Airplane, InCall, InDataSession, InCallAndDataSession
-    }
-
-    public class Data implements simulator.actors.interfaces.ActorData {
     }
 
     private ActorRef cell, subscriber;
@@ -117,13 +110,13 @@ public class UE extends Actor<State, Data> {
         initialize();
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> processPowerOn() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processPowerOn() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(50, 60), PowerOff);
         removeWork();
         return goTo(On);
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> processPowerOff() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processPowerOff() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(0, 10), PowerOn);
         removeWork();
         return goTo(Off);

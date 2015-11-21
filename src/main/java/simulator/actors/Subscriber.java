@@ -23,22 +23,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
-import simulator.actors.Subscriber.Data;
-import simulator.actors.Subscriber.State;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.DeviceEvents;
 import simulator.actors.events.NetworkEvents;
-import simulator.actors.interfaces.ActorData;
-import simulator.actors.interfaces.ActorState;
 
-public class Subscriber extends Actor<State, Data> {
+public class Subscriber extends Actor {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
 
-    public enum State implements simulator.actors.interfaces.ActorState {
+    public enum State implements simulator.actors.interfaces.State {
         Sleeping, Working, Available, Unavailable, Walking, Flying
-    }
-
-    public class Data implements simulator.actors.interfaces.ActorData {
     }
 
     private List<ActorRef> devices = new ArrayList<ActorRef>();
@@ -88,45 +81,45 @@ public class Subscriber extends Actor<State, Data> {
         self().tell(SendSMS, ActorRef.noSender());
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> addDevice() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> addDevice() {
         devices.add(sender());
         sender().tell(PickedBySubscriber, self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> removeDevice() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> removeDevice() {
         devices.remove(sender());
         sender().tell(PickedBySubscriber, self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> processWakeUp() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processWakeUp() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(50, 60), GoToSleep);
         log.info("{} woke up.", self().path().name());
         removeWork();
         return goTo(Available);
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> processGoToSleep() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processGoToSleep() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(20, 30), WakeUp);
         log.info("{} went to sleep.", self().path().name());
         removeWork();
         return goTo(Sleeping);
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> processGoToWork() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processGoToWork() {
         removeWork();
         return goTo(Working);
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> processReturnFromWork() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processReturnFromWork() {
         removeWork();
         return goTo(Available);
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> sendSMS() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> sendSMS() {
         if (devices.isEmpty())
             return removeWork();
 
@@ -136,7 +129,7 @@ public class Subscriber extends Actor<State, Data> {
         return stay();
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> makeVoiceCall() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> makeVoiceCall() {
         if (devices.isEmpty())
             return removeWork();
 
@@ -147,7 +140,7 @@ public class Subscriber extends Actor<State, Data> {
         return stay();
     }
 
-    private akka.actor.FSM.State<ActorState, ActorData> requestDataSession() {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> requestDataSession() {
         if (devices.isEmpty())
             return removeWork();
 

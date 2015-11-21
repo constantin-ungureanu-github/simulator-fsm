@@ -14,15 +14,12 @@ import java.util.Set;
 
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
-import simulator.network.Network.Data;
+import simulator.actors.interfaces.Data;
 import simulator.network.Network.State;
 
 public class Network extends AbstractFSM<State, Data> {
-    public enum State implements simulator.actors.interfaces.ActorState {
+    public enum State implements simulator.actors.interfaces.State {
         Available
-    }
-
-    public class Data implements simulator.actors.interfaces.ActorData {
     }
 
     private Set<ActorRef> cells = new HashSet<>();
@@ -38,29 +35,29 @@ public class Network extends AbstractFSM<State, Data> {
     {
         startWith(Available, null);
 
-        when(Available, matchEventEquals(ConnectCell, (state, data) -> {
+        when(Available, matchEventEquals(ConnectCell, (event, data) -> {
             addCell(sender());
             sender().tell(ConnectCellAck, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(DisconnectCell, (state, data) -> {
+        when(Available, matchEventEquals(DisconnectCell, (event, data) -> {
             removeCell(sender());
             sender().tell(DisconnectFromNetwork, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(RegisterDevice, (state, data) -> {
+        when(Available, matchEventEquals(RegisterDevice, (event, data) -> {
             sender().tell(ConnectCellAck, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(UnregisterDevice, (state, data) -> {
+        when(Available, matchEventEquals(UnregisterDevice, (event, data) -> {
             sender().tell(DisconnectFromNetwork, self());
             return stay();
         }));
 
-        when(Available, matchEventEquals(Routing, (state, data) -> {
+        when(Available, matchEventEquals(Routing, (event, data) -> {
             return stay();
         }));
 

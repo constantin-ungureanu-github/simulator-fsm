@@ -6,12 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 import akka.actor.ActorRef;
-import simulator.actors.abstracts.NE.State;
-import simulator.actors.interfaces.ActorData;
-import simulator.actors.interfaces.ActorState;
 
-public abstract class NE extends Actor<State, ActorData> {
-    public enum State implements ActorState {
+public abstract class NE extends Actor {
+    public enum State implements simulator.actors.interfaces.State {
         On, Off
     }
 

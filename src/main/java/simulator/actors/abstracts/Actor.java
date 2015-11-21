@@ -8,17 +8,15 @@ import java.util.Set;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 import simulator.actors.Master;
-import simulator.actors.interfaces.ActorData;
 import simulator.actors.interfaces.Events;
-import simulator.actors.interfaces.ActorState;
 import simulator.utils.WorkLoad;
 
-public abstract class Actor<State, Data> extends AbstractFSM<ActorState, ActorData> {
+public abstract class Actor extends AbstractFSM<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> {
     private Map<Long, Set<Events>> workMap = new HashMap<>();
     private WorkLoad workLoad = new WorkLoad();
     private Long step;
 
-    protected akka.actor.FSM.State<ActorState, ActorData> processStep(Long step) {
+    protected akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processStep(Long step) {
         setStep(step);
         scheduleCurrentWork();
 
@@ -29,7 +27,7 @@ public abstract class Actor<State, Data> extends AbstractFSM<ActorState, ActorDa
         return stay();
     }
 
-    protected akka.actor.FSM.State<ActorState, ActorData> removeWork() {
+    protected akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> removeWork() {
         workLoad.removeWork();
         if (workLoad.isWorkDone()) {
             Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
