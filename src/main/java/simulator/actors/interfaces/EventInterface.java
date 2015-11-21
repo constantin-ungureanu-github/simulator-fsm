@@ -1,4 +1,4 @@
 package simulator.actors.interfaces;
 
-public interface TemplateState {
+public interface EventInterface {
 }

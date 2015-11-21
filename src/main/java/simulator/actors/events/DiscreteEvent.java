@@ -1,7 +1,7 @@
 package simulator.actors.events;
 
-import simulator.actors.interfaces.TemplateEvents;
+import simulator.actors.interfaces.EventInterface;
 
-public enum DiscreteEvent implements TemplateEvents {
+public enum DiscreteEvent implements EventInterface {
     RemoveWork
 }

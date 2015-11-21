@@ -1,8 +1,8 @@
 package simulator.actors.events;
 
-import simulator.actors.interfaces.TemplateEvents;
+import simulator.actors.interfaces.EventInterface;
 
-public enum DeviceEvents implements TemplateEvents {
+public enum DeviceEvents implements EventInterface {
     PickedBySubscriber,
     AddDevice, RemoveDevice,
     PowerOn, PowerOff,

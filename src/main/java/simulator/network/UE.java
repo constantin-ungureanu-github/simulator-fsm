@@ -31,19 +31,19 @@ import akka.actor.ActorRef;
 import simulator.actors.Master;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.DeviceEvents;
-import simulator.actors.interfaces.TemplateData;
-import simulator.actors.interfaces.TemplateState;
+import simulator.actors.interfaces.DataInterface;
+import simulator.actors.interfaces.StateInterface;
 import simulator.network.UE.Data;
 import simulator.network.UE.State;
 
 public class UE extends Actor<State, Data> {
     private static Logger log = LoggerFactory.getLogger(UE.class);
 
-    public enum State implements simulator.actors.interfaces.TemplateState {
+    public enum State implements simulator.actors.interfaces.StateInterface {
         Off, On, Airplane, InCall, InDataSession, InCallAndDataSession
     }
 
-    public class Data implements simulator.actors.interfaces.TemplateData {
+    public class Data implements simulator.actors.interfaces.DataInterface {
     }
 
     private ActorRef cell, subscriber;
@@ -117,13 +117,13 @@ public class UE extends Actor<State, Data> {
         initialize();
     }
 
-    private akka.actor.FSM.State<TemplateState, TemplateData> processPowerOn() {
+    private akka.actor.FSM.State<StateInterface, DataInterface> processPowerOn() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(50, 60), PowerOff);
         removeWork();
         return goTo(On);
     }
 
-    private akka.actor.FSM.State<TemplateState, TemplateData> processPowerOff() {
+    private akka.actor.FSM.State<StateInterface, DataInterface> processPowerOff() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(0, 10), PowerOn);
         removeWork();
         return goTo(Off);
