@@ -18,11 +18,11 @@ import simulator.network.Network.Data;
 import simulator.network.Network.State;
 
 public class Network extends AbstractFSM<State, Data> {
-    public enum State implements simulator.actors.interfaces.StateInterface {
+    public enum State implements simulator.actors.interfaces.ActorState {
         Available
     }
 
-    public class Data implements simulator.actors.interfaces.DataInterface {
+    public class Data implements simulator.actors.interfaces.ActorData {
     }
 
     private Set<ActorRef> cells = new HashSet<>();

@@ -1,4 +1,4 @@
 package simulator.actors.interfaces;
 
-public interface StateInterface {
+public interface ActorState {
 }

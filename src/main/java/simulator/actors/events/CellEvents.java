@@ -1,8 +1,8 @@
 package simulator.actors.events;
 
-import simulator.actors.interfaces.EventInterface;
+import simulator.actors.interfaces.Events;
 
-public enum CellEvents implements EventInterface {
+public enum CellEvents implements Events {
     ConnectToNetwork, DisconnectFromNetwork,
     ConnectDevice, DisconnectDevice, ConnectCellAck
 }

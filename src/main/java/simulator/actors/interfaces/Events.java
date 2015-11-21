@@ -1,4 +1,4 @@
 package simulator.actors.interfaces;
 
-public interface EventInterface {
+public interface Events {
 }

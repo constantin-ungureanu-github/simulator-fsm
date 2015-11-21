@@ -7,11 +7,11 @@ import java.util.Set;
 
 import akka.actor.ActorRef;
 import simulator.actors.abstracts.NE.State;
-import simulator.actors.interfaces.DataInterface;
-import simulator.actors.interfaces.StateInterface;
+import simulator.actors.interfaces.ActorData;
+import simulator.actors.interfaces.ActorState;
 
-public abstract class NE extends Actor<State, DataInterface> {
-    public enum State implements StateInterface {
+public abstract class NE extends Actor<State, ActorData> {
+    public enum State implements ActorState {
         On, Off
     }
 

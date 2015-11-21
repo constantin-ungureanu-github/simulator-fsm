@@ -1,7 +1,7 @@
 package simulator.actors.events;
 
-import simulator.actors.interfaces.EventInterface;
+import simulator.actors.interfaces.Events;
 
-public enum DiscreteEvent implements EventInterface {
+public enum DiscreteEvent implements Events {
     RemoveWork
 }

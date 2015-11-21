@@ -8,17 +8,17 @@ import java.util.Set;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 import simulator.actors.Master;
-import simulator.actors.interfaces.DataInterface;
-import simulator.actors.interfaces.EventInterface;
-import simulator.actors.interfaces.StateInterface;
+import simulator.actors.interfaces.ActorData;
+import simulator.actors.interfaces.Events;
+import simulator.actors.interfaces.ActorState;
 import simulator.utils.WorkLoad;
 
-public abstract class Actor<State, Data> extends AbstractFSM<StateInterface, DataInterface> {
-    private Map<Long, Set<EventInterface>> workMap = new HashMap<>();
+public abstract class Actor<State, Data> extends AbstractFSM<ActorState, ActorData> {
+    private Map<Long, Set<Events>> workMap = new HashMap<>();
     private WorkLoad workLoad = new WorkLoad();
     private Long step;
 
-    protected akka.actor.FSM.State<StateInterface, DataInterface> processStep(Long step) {
+    protected akka.actor.FSM.State<ActorState, ActorData> processStep(Long step) {
         setStep(step);
         scheduleCurrentWork();
 
@@ -29,7 +29,7 @@ public abstract class Actor<State, Data> extends AbstractFSM<StateInterface, Dat
         return stay();
     }
 
-    protected akka.actor.FSM.State<StateInterface, DataInterface> removeWork() {
+    protected akka.actor.FSM.State<ActorState, ActorData> removeWork() {
         workLoad.removeWork();
         if (workLoad.isWorkDone()) {
             Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
@@ -41,8 +41,8 @@ public abstract class Actor<State, Data> extends AbstractFSM<StateInterface, Dat
         workLoad.addWork();
     }
 
-    protected Set<EventInterface> getWorkMapEvents(Long step) {
-        Set<EventInterface> events;
+    protected Set<Events> getWorkMapEvents(Long step) {
+        Set<Events> events;
         if (workMap.containsKey(step)) {
             events = workMap.get(step);
         } else {
@@ -54,7 +54,7 @@ public abstract class Actor<State, Data> extends AbstractFSM<StateInterface, Dat
 
     protected void scheduleCurrentWork() {
         if (workMap.containsKey(step)) {
-            for (EventInterface event : workMap.get(step)) {
+            for (Events event : workMap.get(step)) {
                 workLoad.addWork();
                 self().tell(event, ActorRef.noSender());
             }
@@ -62,8 +62,8 @@ public abstract class Actor<State, Data> extends AbstractFSM<StateInterface, Dat
         }
     }
 
-    protected void scheduleEvent(Long step, EventInterface event) {
-        Set<EventInterface> events = getWorkMapEvents(step);
+    protected void scheduleEvent(Long step, Events event) {
+        Set<Events> events = getWorkMapEvents(step);
 
         events.add(event);
     }

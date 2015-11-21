@@ -28,17 +28,17 @@ import simulator.actors.Subscriber.State;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.DeviceEvents;
 import simulator.actors.events.NetworkEvents;
-import simulator.actors.interfaces.DataInterface;
-import simulator.actors.interfaces.StateInterface;
+import simulator.actors.interfaces.ActorData;
+import simulator.actors.interfaces.ActorState;
 
 public class Subscriber extends Actor<State, Data> {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
 
-    public enum State implements simulator.actors.interfaces.StateInterface {
+    public enum State implements simulator.actors.interfaces.ActorState {
         Sleeping, Working, Available, Unavailable, Walking, Flying
     }
 
-    public class Data implements simulator.actors.interfaces.DataInterface {
+    public class Data implements simulator.actors.interfaces.ActorData {
     }
 
     private List<ActorRef> devices = new ArrayList<ActorRef>();
@@ -88,45 +88,45 @@ public class Subscriber extends Actor<State, Data> {
         self().tell(SendSMS, ActorRef.noSender());
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> addDevice() {
+    private akka.actor.FSM.State<ActorState, ActorData> addDevice() {
         devices.add(sender());
         sender().tell(PickedBySubscriber, self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> removeDevice() {
+    private akka.actor.FSM.State<ActorState, ActorData> removeDevice() {
         devices.remove(sender());
         sender().tell(PickedBySubscriber, self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> processWakeUp() {
+    private akka.actor.FSM.State<ActorState, ActorData> processWakeUp() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(50, 60), GoToSleep);
         log.info("{} woke up.", self().path().name());
         removeWork();
         return goTo(Available);
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> processGoToSleep() {
+    private akka.actor.FSM.State<ActorState, ActorData> processGoToSleep() {
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(20, 30), WakeUp);
         log.info("{} went to sleep.", self().path().name());
         removeWork();
         return goTo(Sleeping);
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> processGoToWork() {
+    private akka.actor.FSM.State<ActorState, ActorData> processGoToWork() {
         removeWork();
         return goTo(Working);
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> processReturnFromWork() {
+    private akka.actor.FSM.State<ActorState, ActorData> processReturnFromWork() {
         removeWork();
         return goTo(Available);
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> sendSMS() {
+    private akka.actor.FSM.State<ActorState, ActorData> sendSMS() {
         if (devices.isEmpty())
             return removeWork();
 
@@ -136,7 +136,7 @@ public class Subscriber extends Actor<State, Data> {
         return stay();
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> makeVoiceCall() {
+    private akka.actor.FSM.State<ActorState, ActorData> makeVoiceCall() {
         if (devices.isEmpty())
             return removeWork();
 
@@ -147,7 +147,7 @@ public class Subscriber extends Actor<State, Data> {
         return stay();
     }
 
-    private akka.actor.FSM.State<StateInterface, DataInterface> requestDataSession() {
+    private akka.actor.FSM.State<ActorState, ActorData> requestDataSession() {
         if (devices.isEmpty())
             return removeWork();
 
