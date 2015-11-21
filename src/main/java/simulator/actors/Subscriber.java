@@ -3,17 +3,6 @@ package simulator.actors;
 import static simulator.actors.Subscriber.State.Available;
 import static simulator.actors.Subscriber.State.Sleeping;
 import static simulator.actors.Subscriber.State.Working;
-import static simulator.actors.events.DeviceEvents.AddDevice;
-import static simulator.actors.events.DeviceEvents.PickedBySubscriber;
-import static simulator.actors.events.DeviceEvents.RemoveDevice;
-import static simulator.actors.events.DiscreteEvent.RemoveWork;
-import static simulator.actors.events.NetworkEvents.MakeVoiceCall;
-import static simulator.actors.events.NetworkEvents.RequestDataSession;
-import static simulator.actors.events.NetworkEvents.SendSMS;
-import static simulator.actors.events.SubscriberEvents.GoToSleep;
-import static simulator.actors.events.SubscriberEvents.GoToWork;
-import static simulator.actors.events.SubscriberEvents.ReturnFromWork;
-import static simulator.actors.events.SubscriberEvents.WakeUp;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +13,17 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
 import simulator.actors.abstracts.Actor;
-import simulator.actors.events.DeviceEvents;
-import simulator.actors.events.NetworkEvents;
+import simulator.actors.events.DeviceEvents.AddDevice;
+import simulator.actors.events.DeviceEvents.MakeVoiceCall;
+import simulator.actors.events.DeviceEvents.PickedBySubscriber;
+import simulator.actors.events.DeviceEvents.RemoveDevice;
+import simulator.actors.events.DeviceEvents.RequestDataSession;
+import simulator.actors.events.DeviceEvents.SendSMS;
+import simulator.actors.events.DiscreteEvent;
+import simulator.actors.events.SubscriberEvents.GoToSleep;
+import simulator.actors.events.SubscriberEvents.GoToWork;
+import simulator.actors.events.SubscriberEvents.ReturnFromWork;
+import simulator.actors.events.SubscriberEvents.WakeUp;
 
 public class Subscriber extends Actor {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
@@ -38,33 +36,33 @@ public class Subscriber extends Actor {
 
     {
         startWith(Available, null);
-        scheduleEvent((long) ThreadLocalRandom.current().nextInt(20, 30), GoToSleep);
+        scheduleEvent((long) ThreadLocalRandom.current().nextInt(20, 30), new GoToSleep());
 
-        when(Sleeping, matchEventEquals(WakeUp, (state, data) -> processWakeUp()));
-        when(Available, matchEventEquals(GoToSleep, (state, data) -> processGoToSleep()));
-        when(Available, matchEventEquals(GoToWork, (state, data) -> processGoToWork()));
-        when(Working, matchEventEquals(ReturnFromWork, (state, data) -> processReturnFromWork()));
+        when(Sleeping, matchEvent(WakeUp.class, (state, data) -> processWakeUp()));
+        when(Available, matchEvent(GoToSleep.class, (state, data) -> processGoToSleep()));
+        when(Available, matchEvent(GoToWork.class, (state, data) -> processGoToWork()));
+        when(Working, matchEvent(ReturnFromWork.class, (state, data) -> processReturnFromWork()));
 
         when(Available,
-                matchEvent(NetworkEvents.class, (event, data) -> (event == SendSMS), (state, data) -> sendSMS())
-                .event(NetworkEvents.class, (event, data) -> (event == MakeVoiceCall), (state, data) -> makeVoiceCall())
-                .event(NetworkEvents.class, (event, data) -> (event == RequestDataSession), (state, data) -> requestDataSession()));
+                matchEvent(SendSMS.class, (event, data) -> sendSMS())
+                .event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
+                .event(RequestDataSession.class, (event, data) -> requestDataSession()));
 
         when(Working,
-                matchEvent(NetworkEvents.class, (event, data) -> (event == SendSMS), (state, data) -> sendSMS())
-                .event(NetworkEvents.class, (event, data) -> (event == MakeVoiceCall), (state, data) -> makeVoiceCall())
-                .event(NetworkEvents.class, (event, data) -> (event == RequestDataSession), (state, data) -> requestDataSession()));
+                matchEvent(SendSMS.class, (event, data) -> sendSMS())
+                .event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
+                .event(RequestDataSession.class, (event, data) -> requestDataSession()));
 
         when(Sleeping,
-                matchEvent(NetworkEvents.class, (event, data) -> (event == SendSMS), (state, data) -> sendSMS())
-                .event(NetworkEvents.class, (event, data) -> (event == MakeVoiceCall), (state, data) -> makeVoiceCall())
-                .event(NetworkEvents.class, (event, data) -> (event == RequestDataSession), (state, data) -> requestDataSession()));
+                matchEvent(SendSMS.class, (event, data) -> sendSMS())
+                .event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
+                .event(RequestDataSession.class, (event, data) -> requestDataSession()));
 
         whenUnhandled(
                 matchEvent(Master.Step.class, (step, data) -> processStep(step.getStep()))
-                .eventEquals(AddDevice, (state, data) -> addDevice())
-                .eventEquals(RemoveDevice, (state, data) -> removeDevice())
-                .eventEquals(RemoveWork, (state, data) -> removeWork())
+                .event(AddDevice.class, (state, data) -> addDevice())
+                .event(RemoveDevice.class, (state, data) -> removeDevice())
+                .event(DiscreteEvent.RemoveWork.class, (event, data) -> removeWork())
                 .anyEvent((event, data) -> {
             log.error("Unhandled event: {}", event);
             return stay();
@@ -78,32 +76,32 @@ public class Subscriber extends Actor {
         super.scheduleCurrentWork();
 
         addWork();
-        self().tell(SendSMS, ActorRef.noSender());
+        self().tell(new SendSMS(), ActorRef.noSender());
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> addDevice() {
         devices.add(sender());
-        sender().tell(PickedBySubscriber, self());
+        sender().tell(new PickedBySubscriber(), self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> removeDevice() {
         devices.remove(sender());
-        sender().tell(PickedBySubscriber, self());
+        sender().tell(new PickedBySubscriber(), self());
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processWakeUp() {
-        scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(50, 60), GoToSleep);
+        scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(50, 60), new GoToSleep());
         log.info("{} woke up.", self().path().name());
         removeWork();
         return goTo(Available);
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processGoToSleep() {
-        scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(20, 30), WakeUp);
+        scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(20, 30), new WakeUp());
         log.info("{} went to sleep.", self().path().name());
         removeWork();
         return goTo(Sleeping);
@@ -124,7 +122,7 @@ public class Subscriber extends Actor {
             return removeWork();
 
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
-        device.tell(DeviceEvents.SendSMS, self());
+        device.tell(new SendSMS(), self());
 
         return stay();
     }
@@ -135,7 +133,7 @@ public class Subscriber extends Actor {
 
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
-            device.tell(DeviceEvents.MakeVoiceCall, self());
+            device.tell(new MakeVoiceCall(), self());
         }
         return stay();
     }
@@ -146,7 +144,7 @@ public class Subscriber extends Actor {
 
         ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
-            device.tell(DeviceEvents.RequestDataSession, self());
+            device.tell(new RequestDataSession(), self());
         }
         return stay();
     }

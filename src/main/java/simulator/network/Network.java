@@ -1,12 +1,5 @@
 package simulator.network;
 
-import static simulator.actors.events.CellEvents.ConnectCellAck;
-import static simulator.actors.events.CellEvents.DisconnectFromNetwork;
-import static simulator.actors.events.NetworkEvents.ConnectCell;
-import static simulator.actors.events.NetworkEvents.DisconnectCell;
-import static simulator.actors.events.NetworkEvents.RegisterDevice;
-import static simulator.actors.events.NetworkEvents.Routing;
-import static simulator.actors.events.NetworkEvents.UnregisterDevice;
 import static simulator.network.Network.State.Available;
 
 import java.util.HashSet;
@@ -14,6 +7,13 @@ import java.util.Set;
 
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
+import simulator.actors.events.CellEvents.ConnectCellAck;
+import simulator.actors.events.CellEvents.DisconnectFromNetwork;
+import simulator.actors.events.NetworkEvents.ConnectCell;
+import simulator.actors.events.NetworkEvents.DisconnectCell;
+import simulator.actors.events.NetworkEvents.RegisterDevice;
+import simulator.actors.events.NetworkEvents.Routing;
+import simulator.actors.events.NetworkEvents.UnregisterDevice;
 import simulator.actors.interfaces.Data;
 import simulator.network.Network.State;
 
@@ -35,29 +35,21 @@ public class Network extends AbstractFSM<State, Data> {
     {
         startWith(Available, null);
 
-        when(Available, matchEventEquals(ConnectCell, (event, data) -> {
+        when(Available, matchEvent(ConnectCell.class, (event, data) -> {
             addCell(sender());
-            sender().tell(ConnectCellAck, self());
+            sender().tell(new ConnectCellAck(), self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(DisconnectCell, (event, data) -> {
+        }).event(DisconnectCell.class, (event, data) -> {
             removeCell(sender());
-            sender().tell(DisconnectFromNetwork, self());
+            sender().tell(new DisconnectFromNetwork(), self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(RegisterDevice, (event, data) -> {
-            sender().tell(ConnectCellAck, self());
+        }).event(RegisterDevice.class, (event, data) -> {
+            sender().tell(new ConnectCellAck(), self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(UnregisterDevice, (event, data) -> {
-            sender().tell(DisconnectFromNetwork, self());
+        }).event(UnregisterDevice.class, (event, data) -> {
+            sender().tell(new DisconnectFromNetwork(), self());
             return stay();
-        }));
-
-        when(Available, matchEventEquals(Routing, (event, data) -> {
+        }).event(Routing.class, (event, data) -> {
             return stay();
         }));
 

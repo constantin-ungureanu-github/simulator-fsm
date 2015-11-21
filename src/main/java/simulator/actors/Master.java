@@ -4,9 +4,6 @@ import static simulator.actors.Master.Events.Ping;
 import static simulator.actors.Master.Events.Pong;
 import static simulator.actors.Master.Events.Stop;
 import static simulator.actors.Master.Events.Tick;
-import static simulator.actors.events.CellEvents.ConnectToNetwork;
-import static simulator.actors.events.DeviceEvents.AddDevice;
-import static simulator.actors.events.DeviceEvents.ConnectToCell;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -20,6 +17,9 @@ import org.slf4j.LoggerFactory;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import simulator.actors.events.CellEvents.ConnectToNetwork;
+import simulator.actors.events.DeviceEvents.AddDevice;
+import simulator.actors.events.DeviceEvents.ConnectToCell;
 import simulator.network.Network;
 import simulator.network.UE;
 import simulator.utils.WorkLoad;
@@ -138,17 +138,17 @@ public class Master extends UntypedActor {
 
     private void initializeCells() {
         workload.addWork(cellsNumber);
-        cells.stream().forEach(cell -> cell.tell(ConnectToNetwork, network));
+        cells.stream().forEach(cell -> cell.tell(new ConnectToNetwork(), network));
     }
 
     private void initializeDevices() {
         workload.addWork(devicesNumber);
-        devices.stream().forEach(device -> device.tell(ConnectToCell, cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber))));
+        devices.stream().forEach(device -> device.tell(new ConnectToCell(), cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber))));
     }
 
     private void initializeSubscribers() {
         workload.addWork(devicesNumber);
-        devices.stream().forEach(device -> subscribers.get((int) ThreadLocalRandom.current().nextLong(subscribersNumber)).tell(AddDevice, device));
+        devices.stream().forEach(device -> subscribers.get((int) ThreadLocalRandom.current().nextLong(subscribersNumber)).tell(new AddDevice(), device));
     }
 
     public static final class Start implements Serializable {

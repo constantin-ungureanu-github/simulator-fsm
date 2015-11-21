@@ -1,12 +1,5 @@
 package simulator.network._2G.GSM.GPRS.EDGE;
 
-import static simulator.actors.events.CellEvents.ConnectCellAck;
-import static simulator.actors.events.CellEvents.ConnectDevice;
-import static simulator.actors.events.CellEvents.ConnectToNetwork;
-import static simulator.actors.events.CellEvents.DisconnectDevice;
-import static simulator.actors.events.DeviceEvents.AckConnectToCell;
-import static simulator.actors.events.DeviceEvents.AckDisconnectFromCell;
-import static simulator.actors.events.NetworkEvents.ConnectCell;
 import static simulator.network._2G.GSM.GPRS.EDGE.Cell.State.Off;
 import static simulator.network._2G.GSM.GPRS.EDGE.Cell.State.On;
 
@@ -15,6 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import simulator.actors.Master;
 import simulator.actors.events.CellEvents;
+import simulator.actors.events.CellEvents.ConnectCellAck;
+import simulator.actors.events.CellEvents.ConnectDevice;
+import simulator.actors.events.CellEvents.ConnectToNetwork;
+import simulator.actors.events.CellEvents.DisconnectDevice;
+import simulator.actors.events.DeviceEvents.AckConnectToCell;
+import simulator.actors.events.DeviceEvents.AckDisconnectFromCell;
+import simulator.actors.events.NetworkEvents.ConnectCell;
 
 public class Cell extends simulator.actors.abstracts.Cell {
     private static Logger log = LoggerFactory.getLogger(Cell.class);
@@ -26,29 +26,29 @@ public class Cell extends simulator.actors.abstracts.Cell {
     {
         startWith(Off, null);
 
-        when(Off, matchEvent(CellEvents.class, (event, data) -> (event == ConnectToNetwork), (event, data) -> {
-            sender().tell(ConnectCell, self());
+        when(Off, matchEvent(ConnectToNetwork.class, (event, data) -> {
+            sender().tell(new ConnectCell(), self());
             return stay();
-        }).event(CellEvents.class, (event, data) -> (event == ConnectCellAck), (event, data) -> {
+        }).event(ConnectCellAck.class, (event, data) -> {
             setNetwork(sender());
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(On);
-        }).event(CellEvents.class, (event, data) -> (event == ConnectDevice), (event, data) -> {
+        }).event(ConnectDevice.class, (event, data) -> {
             addDevice(sender());
-            sender().tell(AckConnectToCell, self());
+            sender().tell(new AckConnectToCell(), self());
             return stay();
         }).event(CellEvents.class, (event, state) -> {
             log.error("Unhandled event: {}", event);
             return stay();
         }));
 
-        when(On, matchEvent(CellEvents.class, (event, data) -> (event == ConnectDevice), (state, data) -> {
+        when(On, matchEvent(ConnectDevice.class, (state, data) -> {
             addDevice(sender());
-            sender().tell(AckConnectToCell, self());
+            sender().tell(new AckConnectToCell(), self());
             return stay();
-        }).event(CellEvents.class, (event, data) -> (event == DisconnectDevice), (event, data) -> {
+        }).event(DisconnectDevice.class, (event, data) -> {
             removeDevice(sender());
-            sender().tell(AckDisconnectFromCell, self());
+            sender().tell(new AckDisconnectFromCell(), self());
             return stay();
         }).event(CellEvents.class, (event, state) -> {
             log.error("Unhandled event: {}", event);

@@ -1,7 +1,20 @@
 package simulator.actors.events;
 
-import simulator.actors.interfaces.Events;
+import akka.actor.ActorRef;
+import simulator.actors.abstracts.Event;
+import simulator.actors.interfaces.Message;
 
-public enum DiscreteEvent implements Events {
-    RemoveWork
+public final class DiscreteEvent {
+    private DiscreteEvent() {
+    }
+
+    public static class RemoveWork extends Event {
+        public RemoveWork() {
+            super();
+        }
+
+        public RemoveWork(ActorRef source, ActorRef destination, Message message) {
+            super(source, destination, message);
+        }
+    }
 }
