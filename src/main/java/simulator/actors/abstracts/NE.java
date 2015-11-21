@@ -8,10 +8,6 @@ import java.util.Set;
 import akka.actor.ActorRef;
 
 public abstract class NE extends Actor {
-    public enum State implements simulator.actors.interfaces.State {
-        On, Off
-    }
-
     private Map<ActorRef, ActorRef> registeredNE = new HashMap<>();
     private Set<ActorRef> activeNE = new HashSet<>();
 

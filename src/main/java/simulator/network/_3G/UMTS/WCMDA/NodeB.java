@@ -1,7 +1,5 @@
 package simulator.network._3G.UMTS.WCMDA;
 
-import static simulator.actors.abstracts.NE.State.Off;
-import static simulator.actors.abstracts.NE.State.On;
 import static simulator.actors.events.CellEvents.ConnectCellAck;
 import static simulator.actors.events.CellEvents.ConnectDevice;
 import static simulator.actors.events.CellEvents.ConnectToNetwork;
@@ -9,6 +7,8 @@ import static simulator.actors.events.CellEvents.DisconnectDevice;
 import static simulator.actors.events.DeviceEvents.AckConnectToCell;
 import static simulator.actors.events.DeviceEvents.AckDisconnectFromCell;
 import static simulator.actors.events.NetworkEvents.ConnectCell;
+import static simulator.network._3G.UMTS.WCMDA.NodeB.State.Off;
+import static simulator.network._3G.UMTS.WCMDA.NodeB.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +19,10 @@ import simulator.actors.events.CellEvents;
 
 public class NodeB extends Cell {
     private static Logger log = LoggerFactory.getLogger(NodeB.class);
+
+    public enum State implements simulator.actors.interfaces.State {
+        On, Off
+    }
 
     {
         startWith(Off, null);

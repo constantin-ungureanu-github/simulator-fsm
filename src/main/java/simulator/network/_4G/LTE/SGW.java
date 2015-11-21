@@ -1,6 +1,6 @@
 package simulator.network._4G.LTE;
 
-import static simulator.actors.abstracts.NE.State.On;
+import static simulator.network._4G.LTE.SGW.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +11,10 @@ import simulator.network._4G.LTE.Interfaces.S5;
 
 public class SGW extends NE {
     private static Logger log = LoggerFactory.getLogger(SGW.class);
+
+    public enum State implements simulator.actors.interfaces.State {
+        On, Off
+    }
 
     {
         startWith(On, null);
