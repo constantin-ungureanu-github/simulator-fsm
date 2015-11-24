@@ -34,8 +34,8 @@ public class Cell extends simulator.actors.abstracts.Cell {
             Master.getMaster().tell(Master.Events.Ping, self());
             return goTo(On);
         }).event(ConnectDevice.class, (event, data) -> {
-            addDevice(sender());
-            sender().tell(new AckConnectToCell(), self());
+            addDevice(event.getSource());
+            event.getSource().tell(new AckConnectToCell(), self());
             return stay();
         }).anyEvent((event, state) -> {
             log.error("Unhandled event: {}", event);
@@ -46,8 +46,8 @@ public class Cell extends simulator.actors.abstracts.Cell {
         }));
 
         when(On, matchEvent(ConnectDevice.class, (event, data) -> {
-            addDevice(sender());
-            sender().tell(new AckConnectToCell(), self());
+            addDevice(event.getSource());
+            event.getSource().tell(new AckConnectToCell(), self());
             return stay();
         }).event(DisconnectDevice.class, (event, data) -> {
             removeDevice(sender());

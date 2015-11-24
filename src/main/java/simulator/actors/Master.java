@@ -14,15 +14,15 @@ import org.apache.logging.log4j.core.async.AsyncLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
 import simulator.actors.events.CellEvents.ConnectToNetwork;
 import simulator.actors.events.DeviceEvents.AddDevice;
 import simulator.actors.events.DeviceEvents.ConnectToCell;
 import simulator.network.Network;
 import simulator.network.UE;
 import simulator.utils.WorkLoad;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
 
 public class Master extends UntypedActor {
     private static Logger log = LoggerFactory.getLogger(Master.class);
@@ -143,7 +143,7 @@ public class Master extends UntypedActor {
 
     private void initializeDevices() {
         workload.addWork(devicesNumber);
-        devices.stream().forEach(device -> device.tell(new ConnectToCell(), cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber))));
+        devices.stream().forEach(device -> device.tell(new ConnectToCell(device, cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber)), null), ActorRef.noSender()));
     }
 
     private void initializeSubscribers() {

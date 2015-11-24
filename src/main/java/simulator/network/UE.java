@@ -8,7 +8,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.ActorRef;
 import simulator.actors.Master;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.CellEvents.ConnectDevice;
@@ -30,6 +29,8 @@ import simulator.actors.events.DeviceEvents.ReceiveSMS;
 import simulator.actors.events.DeviceEvents.ReceiveVoiceCall;
 import simulator.actors.events.DeviceEvents.SendSMS;
 import simulator.actors.events.DiscreteEvent.RemoveWork;
+import simulator.actors.interfaces.Message;
+import akka.actor.ActorRef;
 
 public class UE extends Actor {
     private static Logger log = LoggerFactory.getLogger(UE.class);
@@ -45,24 +46,24 @@ public class UE extends Actor {
         scheduleEvent((long) ThreadLocalRandom.current().nextInt(1, 20), new PowerOff());
 
         when(Off,
-                matchEvent(PowerOn.class, (state, data) -> processPowerOn())
+                matchEvent(PowerOn.class, (event, data) -> processPowerOn())
                 .event(SendSMS.class, (event, data) -> stayAndSendAck())
-                .event(MakeVoiceCall.class, (state, data) -> stayAndSendAck()));
+                .event(MakeVoiceCall.class, (event, data) -> stayAndSendAck()));
         when(On,
-                matchEvent(PowerOff.class, (state, data) -> processPowerOff())
-                .event(ConnectToCell.class, (state, data) -> processConnectToCell())
-                .event(AckConnectToCell.class, (state, data) -> processAckConnectToCell())
+                matchEvent(PowerOff.class, (event, data) -> processPowerOff())
+                .event(ConnectToCell.class, (event, data) -> processConnectToCell(event.getSource(), event.getDestination(), event.getMessage()))
+                .event(AckConnectToCell.class, (event, data) -> processAckConnectToCell())
                 .event(NAckConnectToCell.class, (event, data) -> processNAckConnectToCell())
                 .event(DisconnectFromCell.class, (event, data) -> processDisconnectFromCell())
                 .event(AckDisconnectFromCell.class, (event, data) -> processAckDisconnectFromCell())
                 .event(SendSMS.class, (event, data) -> processSendSMS())
                 .event(ReceiveSMS.class, (event, data) -> processReceiveSMS())
                 .event(AckSendSMS.class, (event, data) -> processAckSendSMS())
-                .event(NAckSendSMS.class, (state, data) -> processNAckSendSMS())
-                .event(MakeVoiceCall.class, (state, data) -> processMakeVoiceCall())
-                .event(ReceiveVoiceCall.class, (state, data) -> processReceiveVoiceCall())
-                .event(AckMakeVoiceCall.class, (state, data) -> processAckMakeVoiceCall())
-                .event(NAckMakeVoiceCall.class, (state, data) -> processNAckMakeVoiceCall()));
+                .event(NAckSendSMS.class, (event, data) -> processNAckSendSMS())
+                .event(MakeVoiceCall.class, (event, data) -> processMakeVoiceCall())
+                .event(ReceiveVoiceCall.class, (event, data) -> processReceiveVoiceCall())
+                .event(AckMakeVoiceCall.class, (event, data) -> processAckMakeVoiceCall())
+                .event(NAckMakeVoiceCall.class, (event, data) -> processNAckMakeVoiceCall()));
 
         whenUnhandled(
                 matchEvent(PickedBySubscriber.class, (event, data) -> processPickedBySubscriber())
@@ -157,8 +158,8 @@ public class UE extends Actor {
         return goTo(Off);
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectToCell() {
-        sender().tell(new ConnectDevice(), self());
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectToCell(ActorRef source, ActorRef destination, Message message) {
+        destination.tell(new ConnectDevice(source, destination, message), ActorRef.noSender());
         return processAckMakeVoiceCall();
     }
 
