@@ -12,7 +12,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.ActorRef;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.DeviceEvents.AddDevice;
 import simulator.actors.events.DeviceEvents.MakeVoiceCall;
@@ -28,6 +27,7 @@ import simulator.actors.events.SubscriberEvents.GoToWork;
 import simulator.actors.events.SubscriberEvents.Move;
 import simulator.actors.events.SubscriberEvents.ReturnFromWork;
 import simulator.actors.events.SubscriberEvents.WakeUp;
+import akka.actor.ActorRef;
 
 public class Subscriber extends Actor {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
@@ -63,9 +63,9 @@ public class Subscriber extends Actor {
                 .event(RequestDataSession.class, (event, data) -> requestDataSession()));
 
         when(Sleeping,
-                matchEvent(SendSMS.class, (event, data) -> sendSMS())
-                .event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
-                .event(RequestDataSession.class, (event, data) -> requestDataSession()));
+                matchEvent(SendSMS.class, (event, data) -> rejectWork())
+                .event(MakeVoiceCall.class, (event, data) -> rejectWork())
+                .event(RequestDataSession.class, (event, data) -> rejectWork()));
 
         when(Walking,
                 matchEvent(SendSMS.class, (event, data) -> sendSMS())
@@ -109,7 +109,7 @@ public class Subscriber extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processWakeUp() {
-        log.info("{} woke up.", self().path().name());
+        log.info("Step {} - {} woke up.", getStep(), self().path().name());
 
         removeWork();
         scheduleEvent(getStep() + ThreadLocalRandom.current().nextInt(5, 10), new GoToWork());
@@ -117,7 +117,7 @@ public class Subscriber extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processGoToSleep() {
-        log.info("{} went to sleep.", self().path().name());
+        log.info("Step {} - {} went to sleep.", getStep(), self().path().name());
 
         removeWork();
 
@@ -127,7 +127,7 @@ public class Subscriber extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processReturnFromWork() {
-        log.info("{} preparing to go to home.", self().path().name());
+        log.info("Step {} - {} is preparing to go to home.", getStep(), self().path().name());
 
         removeWork();
 
@@ -140,7 +140,7 @@ public class Subscriber extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processGoToWork() {
-        log.info("{} preparing to go to work.", self().path().name());
+        log.info("Step {} - {} is preparing to go to work.", getStep(), self().path().name());
 
         removeWork();
 
@@ -153,7 +153,7 @@ public class Subscriber extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processArriveToWork() {
-        log.info("{} arrived at work.", self().path().name());
+        log.info("Step {} - {} arrived at work.", getStep(), self().path().name());
 
         removeWork();
 
@@ -163,7 +163,7 @@ public class Subscriber extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processArriveHome() {
-        log.info("{} arrived home.", self().path().name());
+        log.info("Step {} - {} arrived home.", getStep(), self().path().name());
 
         removeWork();
 
@@ -173,7 +173,7 @@ public class Subscriber extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processMoving() {
-        log.info("{} is walking.", self().path().name());
+        log.info("Step {} - {} is walking.", getStep(), self().path().name());
 
         removeWork();
 
@@ -212,6 +212,10 @@ public class Subscriber extends Actor {
             device.tell(new RequestDataSession(), self());
         }
         return stay();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> rejectWork() {
+        return removeWork();
     }
 
     private void move() {
