@@ -1,12 +1,12 @@
 package simulator.network._4G.LTE;
 
+import static simulator.network._4G.LTE.PCRF.State.Off;
 import static simulator.network._4G.LTE.PCRF.State.On;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import simulator.actors.abstracts.NE;
-import simulator.network._4G.LTE.Interfaces.Gx;
 
 public class PCRF extends NE {
     private static Logger log = LoggerFactory.getLogger(PGW.class);
@@ -16,22 +16,22 @@ public class PCRF extends NE {
     }
 
     {
-        startWith(On, null);
+        startWith(Off, null);
 
-        when(On, matchEvent(Gx.class, (event, data) -> (event == Gx.Event1), (state, data) -> {
-            return stay();
-        }).event(Gx.class, (event, data) -> (event == Gx.Event2), (event, data) -> {
-            return stay();
-        }).event(Gx.class, (event, state) -> {
-            log.error("Unhandled event: {}", event);
-            return stay();
-        }));
+        when(Off,
+                matchAnyEvent((event, state) -> processUnhandledEvent(event)));
 
-        whenUnhandled(matchAnyEvent((event, data) -> {
-            log.error("Unhandled event: {}", event);
-            return stay();
-        }));
+        when(On,
+                matchAnyEvent((event, state) -> processUnhandledEvent(event)));
+
+        whenUnhandled(
+                matchAnyEvent((event, state) -> processUnhandledEvent(event)));
 
         initialize();
+    }
+
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processUnhandledEvent(Object event) {
+        log.error("Unhandled event: {}", event);
+        return stay();
     }
 }

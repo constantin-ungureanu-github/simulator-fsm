@@ -138,7 +138,7 @@ public class Master extends UntypedActor {
 
     private void initializeCells() {
         workload.addWork(cellsNumber);
-        cells.stream().forEach(cell -> cell.tell(new ConnectToNetwork(), network));
+        cells.stream().forEach(cell -> cell.tell(new ConnectToNetwork(cell, network, null), ActorRef.noSender()));
     }
 
     private void initializeDevices() {
