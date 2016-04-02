@@ -10,19 +10,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.logging.log4j.core.async.AsyncLogger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
 import simulator.actors.events.CellEvents.ConnectToNetwork;
 import simulator.actors.events.DeviceEvents.AddDevice;
 import simulator.actors.events.DeviceEvents.ConnectToCell;
 import simulator.network.Network;
 import simulator.network.UE;
 import simulator.utils.WorkLoad;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
 
 public class Master extends UntypedActor {
     private static Logger log = LoggerFactory.getLogger(Master.class);
@@ -60,7 +61,9 @@ public class Master extends UntypedActor {
         } else if (message == Stop) {
             long stopTime = System.currentTimeMillis();
             log.info("Simulation completed after {} milliseconds.", stopTime - startTime);
-            AsyncLogger.stop();
+
+            ((LifeCycle) LogManager.getContext(false)).stop();
+
             getContext().system().terminate();
         } else if (message == Ping) {
             workload.removeWork();

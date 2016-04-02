@@ -24,4 +24,6 @@ sbt stage universal:packageBin
 
 // Options to JVM
 
+-J-server -J-XX:+UseNUMA -J-XX:+UseCondCardMark -J-XX:+UseBiasedLocking -J-XX:+UseParallelGC -J-Xss4M -J-Xms4G -J-Xmx4G
+
 -J-server -J-XX:+UseNUMA -J-XX:+UseCondCardMark -J-XX:+UseBiasedLocking -J-XX:+UseParallelGC -J-Xss4M -J-Xms28G -J-Xmx28G
