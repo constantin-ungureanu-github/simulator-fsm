@@ -5,6 +5,7 @@ import static simulator.network.Network.State.On;
 import java.util.HashSet;
 import java.util.Set;
 
+import akka.actor.ActorRef;
 import simulator.actors.abstracts.NE;
 import simulator.actors.events.CellEvents.ConnectCellAck;
 import simulator.actors.events.CellEvents.DisconnectFromNetwork;
@@ -13,7 +14,6 @@ import simulator.actors.events.NetworkEvents.DisconnectCell;
 import simulator.actors.events.NetworkEvents.RegisterDevice;
 import simulator.actors.events.NetworkEvents.Routing;
 import simulator.actors.events.NetworkEvents.UnregisterDevice;
-import akka.actor.ActorRef;
 
 public class Network extends NE {
     public enum State implements simulator.actors.interfaces.State {
@@ -25,12 +25,10 @@ public class Network extends NE {
     {
         startWith(On, null);
 
-        when(On,
-                matchEvent(ConnectCell.class, (event, data) -> processConnectCell(event))
+        when(On, matchEvent(ConnectCell.class, (event, data) -> processConnectCell(event))
                 .event(DisconnectCell.class, (event, data) -> processDisconnectCell(event))
                 .event(RegisterDevice.class, (event, data) -> processRegisterDevice(event))
-                .event(UnregisterDevice.class, (event, data) -> processUnregisterDevice(event))
-                .event(Routing.class, (event, data) -> processRouting()));
+                .event(UnregisterDevice.class, (event, data) -> processUnregisterDevice(event)).event(Routing.class, (event, data) -> processRouting()));
 
         initialize();
     }

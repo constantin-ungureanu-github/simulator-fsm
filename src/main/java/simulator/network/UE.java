@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import akka.actor.ActorRef;
 import simulator.actors.Master;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.CellEvents.ConnectDevice;
@@ -29,7 +30,6 @@ import simulator.actors.events.DeviceEvents.ReceiveSMS;
 import simulator.actors.events.DeviceEvents.ReceiveVoiceCall;
 import simulator.actors.events.DeviceEvents.SendSMS;
 import simulator.actors.events.DiscreteEvent.RemoveWork;
-import akka.actor.ActorRef;
 
 public class UE extends Actor {
     private static Logger log = LoggerFactory.getLogger(UE.class);
@@ -44,31 +44,22 @@ public class UE extends Actor {
         startWith(On, null);
         scheduleEvent((long) ThreadLocalRandom.current().nextInt(1, 20), new PowerOff());
 
-        when(Off,
-                matchEvent(PowerOn.class, (event, data) -> processPowerOn())
-                .event(SendSMS.class, (event, data) -> stayAndSendAck())
+        when(Off, matchEvent(PowerOn.class, (event, data) -> processPowerOn()).event(SendSMS.class, (event, data) -> stayAndSendAck())
                 .event(MakeVoiceCall.class, (event, data) -> stayAndSendAck()));
 
-        when(On,
-                matchEvent(PowerOff.class, (event, data) -> processPowerOff())
-                .event(ConnectToCell.class, (event, data) -> processConnectToCell(event))
+        when(On, matchEvent(PowerOff.class, (event, data) -> processPowerOff()).event(ConnectToCell.class, (event, data) -> processConnectToCell(event))
                 .event(AckConnectToCell.class, (event, data) -> processAckConnectToCell(event))
                 .event(NAckConnectToCell.class, (event, data) -> processNAckConnectToCell(event))
                 .event(DisconnectFromCell.class, (event, data) -> processDisconnectFromCell(event))
                 .event(AckDisconnectFromCell.class, (event, data) -> processAckDisconnectFromCell(event))
-                .event(SendSMS.class, (event, data) -> processSendSMS())
-                .event(ReceiveSMS.class, (event, data) -> processReceiveSMS())
-                .event(AckSendSMS.class, (event, data) -> processAckSendSMS())
-                .event(NAckSendSMS.class, (event, data) -> processNAckSendSMS())
-                .event(MakeVoiceCall.class, (event, data) -> processMakeVoiceCall())
-                .event(ReceiveVoiceCall.class, (event, data) -> processReceiveVoiceCall())
+                .event(SendSMS.class, (event, data) -> processSendSMS()).event(ReceiveSMS.class, (event, data) -> processReceiveSMS())
+                .event(AckSendSMS.class, (event, data) -> processAckSendSMS()).event(NAckSendSMS.class, (event, data) -> processNAckSendSMS())
+                .event(MakeVoiceCall.class, (event, data) -> processMakeVoiceCall()).event(ReceiveVoiceCall.class, (event, data) -> processReceiveVoiceCall())
                 .event(AckMakeVoiceCall.class, (event, data) -> processAckMakeVoiceCall())
                 .event(NAckMakeVoiceCall.class, (event, data) -> processNAckMakeVoiceCall()));
 
-        whenUnhandled(
-                matchEvent(PickedBySubscriber.class, (event, data) -> processPickedBySubscriber())
-                .event(Master.Step.class, (step, data) -> processStep(step.getStep()))
-                .anyEvent((event, data) -> processUnhandledEvent(event)));
+        whenUnhandled(matchEvent(PickedBySubscriber.class, (event, data) -> processPickedBySubscriber())
+                .event(Master.Step.class, (step, data) -> processStep(step.getStep())).anyEvent((event, data) -> processUnhandledEvent(event)));
 
         initialize();
     }
@@ -106,7 +97,8 @@ public class UE extends Actor {
         return processAckMakeVoiceCall();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckDisconnectFromCell(AckDisconnectFromCell event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckDisconnectFromCell(
+            AckDisconnectFromCell event) {
         setCell(null);
         Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
         return stay();

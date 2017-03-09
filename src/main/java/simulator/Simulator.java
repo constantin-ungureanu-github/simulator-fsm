@@ -1,14 +1,14 @@
 package simulator;
 
-import simulator.actors.Master;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import simulator.actors.Master;
 
 public class Simulator {
     public static void main(String[] args) {
         if (args.length != 4) {
-            System.out.println("Usage run <ticks> <cells> <devices> <subscribers>");
+            System.out.println("Arguments: <ticks> <cells> <devices> <subscribers>");
             return;
         }
 

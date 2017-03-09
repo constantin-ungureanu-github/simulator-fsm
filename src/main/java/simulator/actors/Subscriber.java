@@ -12,6 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import akka.actor.ActorRef;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.DeviceEvents.AddDevice;
 import simulator.actors.events.DeviceEvents.MakeVoiceCall;
@@ -27,7 +28,6 @@ import simulator.actors.events.SubscriberEvents.GoToWork;
 import simulator.actors.events.SubscriberEvents.Move;
 import simulator.actors.events.SubscriberEvents.ReturnFromWork;
 import simulator.actors.events.SubscriberEvents.WakeUp;
-import akka.actor.ActorRef;
 
 public class Subscriber extends Actor {
     private static Logger log = LoggerFactory.getLogger(Subscriber.class);
@@ -52,35 +52,24 @@ public class Subscriber extends Actor {
         when(Walking, matchEvent(Move.class, (state, data) -> processMoving()));
         when(Walking, matchEvent(ArriveHome.class, (state, data) -> processArriveHome()));
 
-        when(Available,
-                matchEvent(SendSMS.class, (event, data) -> sendSMS())
-                .event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
+        when(Available, matchEvent(SendSMS.class, (event, data) -> sendSMS()).event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
                 .event(RequestDataSession.class, (event, data) -> requestDataSession()));
 
-        when(Working,
-                matchEvent(SendSMS.class, (event, data) -> sendSMS())
-                .event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
+        when(Working, matchEvent(SendSMS.class, (event, data) -> sendSMS()).event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
                 .event(RequestDataSession.class, (event, data) -> requestDataSession()));
 
-        when(Sleeping,
-                matchEvent(SendSMS.class, (event, data) -> rejectWork())
-                .event(MakeVoiceCall.class, (event, data) -> rejectWork())
+        when(Sleeping, matchEvent(SendSMS.class, (event, data) -> rejectWork()).event(MakeVoiceCall.class, (event, data) -> rejectWork())
                 .event(RequestDataSession.class, (event, data) -> rejectWork()));
 
-        when(Walking,
-                matchEvent(SendSMS.class, (event, data) -> sendSMS())
-                .event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
+        when(Walking, matchEvent(SendSMS.class, (event, data) -> sendSMS()).event(MakeVoiceCall.class, (event, data) -> makeVoiceCall())
                 .event(RequestDataSession.class, (event, data) -> requestDataSession()));
 
-        whenUnhandled(
-                matchEvent(Master.Step.class, (step, data) -> processStep(step.getStep()))
-                .event(AddDevice.class, (state, data) -> addDevice())
-                .event(RemoveDevice.class, (state, data) -> removeDevice())
-                .event(DiscreteEvent.RemoveWork.class, (event, data) -> removeWork())
+        whenUnhandled(matchEvent(Master.Step.class, (step, data) -> processStep(step.getStep())).event(AddDevice.class, (state, data) -> addDevice())
+                .event(RemoveDevice.class, (state, data) -> removeDevice()).event(DiscreteEvent.RemoveWork.class, (event, data) -> removeWork())
                 .anyEvent((event, data) -> {
-            log.error("Unhandled event: {}", event);
-            return stay();
-        }));
+                    log.error("Unhandled event: {}", event);
+                    return stay();
+                }));
 
         initialize();
     }

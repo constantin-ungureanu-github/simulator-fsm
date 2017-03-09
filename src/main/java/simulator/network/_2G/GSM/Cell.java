@@ -25,20 +25,15 @@ public class Cell extends simulator.actors.abstracts.Cell {
     {
         startWith(Off, null);
 
-        when(Off,
-                matchEvent(ConnectToNetwork.class, (event, data) -> processConnectToNetwork(event))
+        when(Off, matchEvent(ConnectToNetwork.class, (event, data) -> processConnectToNetwork(event))
                 .event(ConnectCellAck.class, (event, data) -> processConnectCellAck(event))
                 .event(ConnectDevice.class, (event, data) -> processConncectDevice(event))
-                .event(DisconnectDevice.class, (event, data) -> processDisconnectDevice(event))
-                .anyEvent((event, state) -> processUnhandledEvent(event)));
+                .event(DisconnectDevice.class, (event, data) -> processDisconnectDevice(event)).anyEvent((event, state) -> processUnhandledEvent(event)));
 
-        when(On,
-                matchEvent(ConnectDevice.class, (event, data) -> processConncectDevice(event))
-                .event(DisconnectDevice.class, (event, data) -> processDisconnectDevice(event))
-                .anyEvent((event, state) -> processUnhandledEvent(event)));
+        when(On, matchEvent(ConnectDevice.class, (event, data) -> processConncectDevice(event))
+                .event(DisconnectDevice.class, (event, data) -> processDisconnectDevice(event)).anyEvent((event, state) -> processUnhandledEvent(event)));
 
-        whenUnhandled(
-                matchAnyEvent((event, data) -> processUnhandledEvent(event)));
+        whenUnhandled(matchAnyEvent((event, data) -> processUnhandledEvent(event)));
 
         initialize();
     }

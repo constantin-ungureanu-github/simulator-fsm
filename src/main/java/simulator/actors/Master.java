@@ -146,7 +146,8 @@ public class Master extends UntypedActor {
 
     private void initializeDevices() {
         workload.addWork(devicesNumber);
-        devices.stream().forEach(device -> device.tell(new ConnectToCell(device, cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber)), null), ActorRef.noSender()));
+        devices.stream().forEach(device -> device.tell(new ConnectToCell(device, cells.get((int) ThreadLocalRandom.current().nextLong(cellsNumber)), null),
+                ActorRef.noSender()));
     }
 
     private void initializeSubscribers() {
@@ -199,10 +200,7 @@ public class Master extends UntypedActor {
     }
 
     public enum Events {
-        Stop,
-        Ping,
-        Pong,
-        Tick
+        Stop, Ping, Pong, Tick
     }
 
     public static class Step {

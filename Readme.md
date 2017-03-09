@@ -12,7 +12,7 @@ sbt "run 100 10000 1000000 1000000" [Java Options]
 
 // Build Eclipse Project
 
-sbt eclipse:clean eclipse
+sbt eclipse
 
 // Build executable package
 
@@ -24,6 +24,6 @@ sbt stage universal:packageBin
 
 // Options to JVM
 
--J-server -J-XX:+UseNUMA -J-XX:+UseCondCardMark -J-XX:+UseBiasedLocking -J-XX:+UseParallelGC -J-Xss4M -J-Xms4G -J-Xmx4G
+-J-server -J-XX:+UseNUMA -J-XX:+UseCondCardMark -J-XX:+UseBiasedLocking -J-XX:+UseParallelGC -J-XX:CompileCommand=dontinline -J-Xss4M -J-Xms4G -J-Xmx4G
 
--J-server -J-XX:+UseNUMA -J-XX:+UseCondCardMark -J-XX:+UseBiasedLocking -J-XX:+UseParallelGC -J-Xss4M -J-Xms28G -J-Xmx28G
+-J-server -J-XX:+UseNUMA -J-XX:+UseCondCardMark -J-XX:+UseBiasedLocking -J-XX:+UseParallelGC -J-XX:CompileCommand=dontinline -J-Xss4M -J-Xms28G -J-Xmx28G

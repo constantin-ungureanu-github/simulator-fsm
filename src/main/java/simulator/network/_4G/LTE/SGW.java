@@ -18,14 +18,11 @@ public class SGW extends NE {
     {
         startWith(Off, null);
 
-        when(Off,
-                matchAnyEvent((event, state) -> processUnhandledEvent(event)));
+        when(Off, matchAnyEvent((event, state) -> processUnhandledEvent(event)));
 
-        when(On,
-                matchAnyEvent((event, state) -> processUnhandledEvent(event)));
+        when(On, matchAnyEvent((event, state) -> processUnhandledEvent(event)));
 
-        whenUnhandled(
-                matchAnyEvent((event, state) -> processUnhandledEvent(event)));
+        whenUnhandled(matchAnyEvent((event, state) -> processUnhandledEvent(event)));
 
         initialize();
     }

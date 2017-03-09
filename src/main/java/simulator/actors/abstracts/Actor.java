@@ -5,11 +5,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import akka.actor.AbstractFSM;
+import akka.actor.ActorRef;
 import simulator.actors.Master;
 import simulator.actors.interfaces.Events;
 import simulator.utils.WorkLoad;
-import akka.actor.AbstractFSM;
-import akka.actor.ActorRef;
 
 public abstract class Actor extends AbstractFSM<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> {
     private Map<Long, Set<Events>> workMap = new HashMap<>();
@@ -66,7 +66,6 @@ public abstract class Actor extends AbstractFSM<simulator.actors.interfaces.Stat
 
         events.add(event);
     }
-
 
     protected Long getStep() {
         return step;
