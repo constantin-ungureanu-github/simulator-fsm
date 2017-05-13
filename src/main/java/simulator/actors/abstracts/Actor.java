@@ -8,6 +8,7 @@ import java.util.Set;
 import akka.actor.AbstractFSM;
 import akka.actor.ActorRef;
 import simulator.actors.Master;
+import simulator.actors.Master.Ping;
 import simulator.actors.interfaces.Events;
 import simulator.utils.WorkLoad;
 
@@ -21,7 +22,7 @@ public abstract class Actor extends AbstractFSM<simulator.actors.interfaces.Stat
         scheduleCurrentWork();
 
         if (workLoad.isWorkDone()) {
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+            Master.getMaster().tell(new Ping(), ActorRef.noSender());
         }
 
         return stay();
@@ -30,7 +31,7 @@ public abstract class Actor extends AbstractFSM<simulator.actors.interfaces.Stat
     protected akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> removeWork() {
         workLoad.removeWork();
         if (workLoad.isWorkDone()) {
-            Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+            Master.getMaster().tell(new Ping(), ActorRef.noSender());
         }
 
         return stay();

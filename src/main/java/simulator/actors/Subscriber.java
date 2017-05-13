@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
+import simulator.actors.Master.Ping;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.DeviceEvents.AddDevice;
 import simulator.actors.events.DeviceEvents.MakeVoiceCall;
@@ -36,7 +37,7 @@ public class Subscriber extends Actor {
         Available, Working, Sleeping, Walking
     }
 
-    private List<ActorRef> devices = new ArrayList<ActorRef>();
+    private final List<ActorRef> devices = new ArrayList<ActorRef>();
     private double latitude, longitude;
 
     {
@@ -85,7 +86,7 @@ public class Subscriber extends Actor {
         devices.add(sender());
 
         sender().tell(new PickedBySubscriber(), self());
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        Master.getMaster().tell(new Ping(), ActorRef.noSender());
         return stay();
     }
 
@@ -93,7 +94,7 @@ public class Subscriber extends Actor {
         devices.remove(sender());
 
         sender().tell(new PickedBySubscriber(), self());
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        Master.getMaster().tell(new Ping(), ActorRef.noSender());
         return stay();
     }
 
@@ -175,7 +176,7 @@ public class Subscriber extends Actor {
         if (devices.isEmpty())
             return removeWork();
 
-        ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
+        final ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         device.tell(new SendSMS(), self());
 
         return stay();
@@ -185,7 +186,7 @@ public class Subscriber extends Actor {
         if (devices.isEmpty())
             return removeWork();
 
-        ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
+        final ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
             device.tell(new MakeVoiceCall(), self());
         }
@@ -196,7 +197,7 @@ public class Subscriber extends Actor {
         if (devices.isEmpty())
             return removeWork();
 
-        ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
+        final ActorRef device = devices.get(ThreadLocalRandom.current().nextInt(devices.size()));
         if (device != null) {
             device.tell(new RequestDataSession(), self());
         }
@@ -216,7 +217,7 @@ public class Subscriber extends Actor {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(final double latitude) {
         this.latitude = latitude;
     }
 
@@ -224,7 +225,7 @@ public class Subscriber extends Actor {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public void setLongitude(final double longitude) {
         this.longitude = longitude;
     }
 }

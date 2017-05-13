@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import simulator.actors.Master;
+import simulator.actors.Master.Ping;
 import simulator.actors.abstracts.Cell;
 import simulator.actors.events.CellEvents.ConnectCellAck;
 import simulator.actors.events.CellEvents.ConnectDevice;
@@ -39,30 +40,30 @@ public class NodeB extends Cell {
         initialize();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectToNetwork(ConnectToNetwork event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectToNetwork(final ConnectToNetwork event) {
         event.getDestination().tell(new ConnectCell(event.getSource(), event.getDestination(), null), self());
         return stay();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectCellAck(ConnectCellAck event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectCellAck(final ConnectCellAck event) {
         setNetwork(sender());
-        Master.getMaster().tell(Master.Events.Ping, self());
+        Master.getMaster().tell(new Ping(), self());
         return goTo(On);
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConncectDevice(ConnectDevice event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConncectDevice(final ConnectDevice event) {
         addDevice(event.getSource());
         event.getSource().tell(new AckConnectToCell(event.getDestination(), event.getSource(), null), self());
         return stay();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processDisconnectDevice(DisconnectDevice event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processDisconnectDevice(final DisconnectDevice event) {
         removeDevice(event.getSource());
         sender().tell(new AckDisconnectFromCell(event.getDestination(), event.getSource(), null), self());
         return stay();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processUnhandledEvent(Object event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processUnhandledEvent(final Object event) {
         log.error("Unhandled event: {}", event);
         return stay();
     }

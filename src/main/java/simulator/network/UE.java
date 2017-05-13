@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
 import simulator.actors.Master;
+import simulator.actors.Master.Ping;
 import simulator.actors.abstracts.Actor;
 import simulator.actors.events.CellEvents.ConnectDevice;
 import simulator.actors.events.CellEvents.DisconnectDevice;
@@ -76,31 +77,31 @@ public class UE extends Actor {
         return goTo(Off);
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectToCell(ConnectToCell event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processConnectToCell(final ConnectToCell event) {
         event.getDestination().tell(new ConnectDevice(event.getSource(), event.getDestination(), event.getMessage()), ActorRef.noSender());
         return processAckMakeVoiceCall();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckConnectToCell(AckConnectToCell event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckConnectToCell(final AckConnectToCell event) {
         setCell(sender());
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        Master.getMaster().tell(new Ping(), ActorRef.noSender());
         return stay();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processNAckConnectToCell(NAckConnectToCell event) {
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processNAckConnectToCell(final NAckConnectToCell event) {
+        Master.getMaster().tell(new Ping(), ActorRef.noSender());
         return stay();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processDisconnectFromCell(DisconnectFromCell event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processDisconnectFromCell(final DisconnectFromCell event) {
         getCell().tell(new DisconnectDevice(), self());
         return processAckMakeVoiceCall();
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckDisconnectFromCell(
-            AckDisconnectFromCell event) {
+            final AckDisconnectFromCell event) {
         setCell(null);
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        Master.getMaster().tell(new Ping(), ActorRef.noSender());
         return stay();
     }
 
@@ -134,12 +135,12 @@ public class UE extends Actor {
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processNAckSendSMS() {
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        Master.getMaster().tell(new Ping(), ActorRef.noSender());
         return stay();
     }
 
     private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processAckSendSMS() {
-        Master.getMaster().tell(Master.Events.Ping, ActorRef.noSender());
+        Master.getMaster().tell(new Ping(), ActorRef.noSender());
         return stay();
     }
 
@@ -154,7 +155,7 @@ public class UE extends Actor {
         return processAckMakeVoiceCall();
     }
 
-    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processUnhandledEvent(Object event) {
+    private akka.actor.FSM.State<simulator.actors.interfaces.State, simulator.actors.interfaces.Data> processUnhandledEvent(final Object event) {
         log.error("Unhandled event: {}", event);
         return stay();
     }
@@ -163,7 +164,7 @@ public class UE extends Actor {
         return cell;
     }
 
-    public void setCell(ActorRef cell) {
+    public void setCell(final ActorRef cell) {
         this.cell = cell;
     }
 
@@ -171,7 +172,7 @@ public class UE extends Actor {
         return subscriber;
     }
 
-    public void setSubscriber(ActorRef subscriber) {
+    public void setSubscriber(final ActorRef subscriber) {
         this.subscriber = subscriber;
     }
 }
