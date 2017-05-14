@@ -8,7 +8,6 @@ mainClass in (Compile, packageBin) := Some("simulator.Simulator")
 EclipseKeys.withSource := true
 EclipseKeys.withJavadoc := true
 enablePlugins(JavaAppPackaging)
-enablePlugins(DockerPlugin)
 
 javacOptions in compile ++= Seq("-encoding", "UTF-8", "-source", "1.8", "-target", "1.8", "-Xlint")
 javacOptions in doc ++= Seq("-encoding", "UTF-8", "-source", "1.8")
