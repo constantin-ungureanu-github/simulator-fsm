@@ -12,10 +12,10 @@ sbt eclipse:clean eclipse
 
 sbt "run 100 1000 100000 120000" [Java Options]
 
+
 // Run simulator for 10 ticks with 10.000 cells and 2.000.000 devices and 2.000.000 subscribers
 
 sbt "run 10 10000 2000000 2000000" [Java Options]
-
 
 
 // Build and run local executable package
